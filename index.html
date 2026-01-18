@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>H7 Alliance Boss Spawn Timer</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #0b0f14;
+      color: #ffffff;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 20px;
+      border-bottom: 1px solid #222;
+    }
+
+    header img {
+      height: 60px;
+    }
+
+    header h1 {
+      font-size: 22px;
+      margin: 0;
+      letter-spacing: 1px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .top-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 15px;
+    }
+
+    button {
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #374151;
+    }
+
+    .boss-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 15px;
+    }
+
+    .boss-card {
+      background: #111827;
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: 0.3s;
+    }
+
+    .boss-name {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    .boss-timer {
+      font-size: 14px;
+      color: #9ca3af;
+    }
+
+    .boss-card button {
+      margin-top: 6px;
+      font-size: 12px;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <img src="assets/images/h7-logo.png" alt="H7 Alliance Logo" />
+    <h1>H7 ALLIANCE BOSS SPAWN TIMER</h1>
+  </header>
+
+  <div class="container">
+    <div class="top-actions">
+      <button onclick="loginAdmin()">Admin Login</button>
+    </div>
+
+    <div id="boss-list" class="boss-grid"></div>
+  </div>
+
+  <footer>
+    All times based on Asia / Manila (UTC+8)
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

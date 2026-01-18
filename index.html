@@ -1,116 +1,224 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>H7 Alliance Boss Spawn Timer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<title>H7 Alliance Boss Spawn Timer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0b0f14;
-      color: #ffffff;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: radial-gradient(circle at top, #0b1220, #05080f);
+  color: #fff;
+}
 
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 16px 24px;
-      border-bottom: 1px solid #1f2937;
-    }
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid #1f2a44;
+}
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+header h1 {
+  font-size: 18px;
+  margin: 0;
+  letter-spacing: 1px;
+}
 
-    .logo img {
-      height: 40px;
-    }
+.sub {
+  text-align: center;
+  font-size: 12px;
+  color: #8aa2c0;
+  margin: 10px 0 20px;
+}
 
-    h1 {
-      font-size: 20px;
-      margin: 0;
-      letter-spacing: 1px;
-    }
+button {
+  cursor: pointer;
+  background: #fff;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
 
-    .admin-btn {
-      background: none;
-      border: 1px solid #ffffff;
-      color: #ffffff;
-      padding: 6px 12px;
-      cursor: pointer;
-      border-radius: 6px;
-    }
+#bossList {
+  max-width: 900px;
+  margin: auto;
+}
 
-    .note {
-      text-align: center;
-      margin: 12px 0;
-      font-size: 12px;
-      color: #9ca3af;
-    }
+.boss {
+  background: linear-gradient(145deg, #0f172a, #0b1220);
+  border: 1px solid #1f2a44;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
-    .boss-list {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 16px;
-    }
+.boss-name {
+  color: #ff4d4d;
+  font-weight: bold;
+}
 
-    .boss {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      background: #111827;
-      border: 1px solid #1f2937;
-      padding: 12px;
-      margin-bottom: 10px;
-      border-radius: 10px;
-    }
+.timer {
+  font-family: monospace;
+}
 
-    .boss img {
-      width: 64px;
-      height: 64px;
-      object-fit: cover;
-      border-radius: 6px;
-    }
+.highlight {
+  box-shadow: 0 0 15px #ff4444;
+  border-color: #ff4444;
+}
 
-    .boss-name {
-      font-weight: bold;
-      color: #ef4444;
-    }
+.admin-only {
+  display: none;
+}
 
-    .boss-timer {
-      margin-left: auto;
-      font-family: monospace;
-    }
-
-    .soon {
-      border-color: #facc15;
-      box-shadow: 0 0 10px #facc15;
-    }
-  </style>
+footer {
+  height: 40px;
+}
+</style>
 </head>
+
 <body>
 
 <header>
-  <div class="logo">
-    <img src="assets/images/h7-logo.png" alt="H7 Alliance Logo">
-    <h1>H7 ALLIANCE BOSS SPAWN TIMER</h1>
-  </div>
-  <button class="admin-btn" onclick="loginAdmin()">Admin Login</button>
+  <h1>H7 ALLIANCE BOSS SPAWN TIMER</h1>
+  <button onclick="adminLogin()">Admin Login</button>
 </header>
 
-<div class="note">
-  All times based on Asia / Manila (UTC+8)
-</div>
+<div class="sub">All times based on Asia / Manila (UTC+8)</div>
 
-<div class="boss-list" id="boss-list">
-  <!-- Bosses will be rendered here by script.js -->
-</div>
+<div id="bossList"></div>
+<footer></footer>
 
-<script src="script.js"></script>
+<script>
+const ADMIN_USER = "admin";
+const ADMIN_PASS = "H7bossings";
+let isAdmin = false;
+
+const BOSSES = [
+  { name:"Venatus", interval:10 },
+  { name:"Viorent", interval:10 },
+  { name:"Ego", interval:21 },
+  { name:"Livera", interval:24 },
+  { name:"Araneo", interval:24 },
+  { name:"Undomiel", interval:24 },
+  { name:"Lady Dalia", interval:18 },
+  { name:"General Aquleus", interval:29 },
+  { name:"Amentis", interval:29 },
+  { name:"Baron Braudmore", interval:32 },
+  { name:"Gareth", interval:32 },
+  { name:"Shuliar", interval:35 },
+  { name:"Larba", interval:35 },
+  { name:"Catena", interval:35 },
+  { name:"Titore", interval:37 },
+  { name:"Wannitas", interval:48 },
+  { name:"Metus", interval:48 },
+  { name:"Duplican", interval:48 },
+  { name:"Secreta", interval:62 },
+  { name:"Ordo", interval:62 },
+  { name:"Asta", interval:62 },
+  { name:"Supore", interval:62 },
+
+  { name:"Clemantis", fixed:["Mon 13:30","Thu 21:00"] },
+  { name:"Saphirus", fixed:["Sun 19:00","Tue 13:30"] },
+  { name:"Thymele", fixed:["Mon 21:00","Wed 13:30"] },
+  { name:"Auraq", fixed:["Fri 00:00","Wed 23:00"] },
+  { name:"Milavy", fixed:["Sat 17:00"] },
+  { name:"Ringor", fixed:["Sat 19:00"] },
+  { name:"Roderick", fixed:["Fri 21:00"] },
+  { name:"Chaiflock", fixed:["Sat 00:00"] },
+  { name:"Benji", fixed:["Sun 23:00"] },
+  { name:"Icaruthia", fixed:["Tue 23:00","Fri 23:00"] },
+  { name:"Motti", fixed:["Wed 21:00","Sat 21:00"] },
+  { name:"Nevaeh", fixed:["Sun 00:00"] }
+];
+
+function nowPH() {
+  return new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Manila"}));
+}
+
+function nextFixedTime(list) {
+  const now = nowPH();
+  let best = null;
+
+  list.forEach(t => {
+    const [d, hm] = t.split(" ");
+    const [h, m] = hm.split(":").map(Number);
+    const dayIndex = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(d);
+    let dt = new Date(now);
+    dt.setHours(h, m, 0, 0);
+    dt.setDate(dt.getDate() + ((dayIndex - dt.getDay() + 7) % 7));
+    if (dt <= now) dt.setDate(dt.getDate() + 7);
+    if (!best || dt < best) best = dt;
+  });
+  return best;
+}
+
+function adminLogin() {
+  const u = prompt("Username:");
+  const p = prompt("Password:");
+  if (u === ADMIN_USER && p === ADMIN_PASS) {
+    isAdmin = true;
+    document.querySelectorAll(".admin-only").forEach(b => b.style.display="inline-block");
+    alert("Admin access granted");
+  } else alert("Invalid login");
+}
+
+function render() {
+  const list = document.getElementById("bossList");
+  list.innerHTML = "";
+
+  BOSSES.forEach(b => {
+    const box = document.createElement("div");
+    box.className = "boss";
+
+    let next;
+    if (b.interval) {
+      const last = Number(localStorage[b.name] || Date.now());
+      next = new Date(last + b.interval*3600000);
+    } else {
+      next = nextFixedTime(b.fixed);
+    }
+
+    const diff = next - nowPH();
+    if (diff <= 300000 && diff > 0) box.classList.add("highlight");
+
+    const t = diff > 0
+      ? new Date(diff).toISOString().substr(11,8)
+      : "SPAWNED";
+
+    box.innerHTML = `
+      <div class="boss-name">${b.name}</div>
+      <div class="timer">${t}</div>
+      <div>
+        <button class="admin-only" onclick="resetBoss('${b.name}',${b.interval||0})">Reset</button>
+        ${b.fixed && b.fixed.length>1 ? `<button class="admin-only" onclick="nextDay('${b.name}')">Next Day</button>`:""}
+      </div>
+    `;
+    list.appendChild(box);
+  });
+}
+
+function resetBoss(name, interval) {
+  if (!isAdmin) return;
+  if (interval) localStorage[name] = Date.now();
+}
+
+function nextDay(name) {
+  if (!isAdmin) return;
+  const b = BOSSES.find(x=>x.name===name);
+  b.fixed.push(b.fixed.shift());
+}
+
+setInterval(render,1000);
+render();
+</script>
+
 </body>
 </html>

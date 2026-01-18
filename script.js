@@ -112,7 +112,7 @@ function render() {
     if (diff > 0 && diff < 5 * 60 * 1000) row.classList.add("soon");
 
     row.innerHTML = `
-      <img src="assets/images/${boss.name.toLowerCase().replace(/ /g,'')}.jpg"
+      <img src="assets/images/${boss.img}" onerror="this.src='https://via.placeholder.com/64'">
            onerror="this.src='https://via.placeholder.com/64'">
       <div>
         <div class="boss-name">${boss.name}</div>

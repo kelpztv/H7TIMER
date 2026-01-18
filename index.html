@@ -2,119 +2,115 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>H7 Alliance Boss Spawn Timer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
     body {
       margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background-color: #0b0f14;
+      font-family: Arial, sans-serif;
+      background: #0b0f14;
       color: #ffffff;
     }
 
     header {
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 16px;
-      padding: 20px;
-      border-bottom: 1px solid #222;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 1px solid #1f2937;
     }
 
-    header img {
-      height: 60px;
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    header h1 {
-      font-size: 22px;
+    .logo img {
+      height: 40px;
+    }
+
+    h1 {
+      font-size: 20px;
       margin: 0;
       letter-spacing: 1px;
     }
 
-    .container {
-      max-width: 1100px;
-      margin: auto;
-      padding: 20px;
-    }
-
-    .top-actions {
-      display: flex;
-      justify-content: flex-end;
-      margin-bottom: 15px;
-    }
-
-    button {
-      background: #1f2937;
-      border: 1px solid #374151;
-      color: #fff;
+    .admin-btn {
+      background: none;
+      border: 1px solid #ffffff;
+      color: #ffffff;
       padding: 6px 12px;
-      border-radius: 6px;
       cursor: pointer;
+      border-radius: 6px;
     }
 
-    button:hover {
-      background: #374151;
-    }
-
-    .boss-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 15px;
-    }
-
-    .boss-card {
-      background: #111827;
-      border-radius: 10px;
-      padding: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      transition: 0.3s;
-    }
-
-    .boss-name {
-      font-size: 16px;
-      font-weight: bold;
-    }
-
-    .boss-timer {
-      font-size: 14px;
+    .note {
+      text-align: center;
+      margin: 12px 0;
+      font-size: 12px;
       color: #9ca3af;
     }
 
-    .boss-card button {
-      margin-top: 6px;
-      font-size: 12px;
+    .boss-list {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 16px;
     }
 
-    footer {
-      text-align: center;
-      padding: 20px;
-      font-size: 12px;
-      color: #6b7280;
+    .boss {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: #111827;
+      border: 1px solid #1f2937;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+    }
+
+    .boss img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .boss-name {
+      font-weight: bold;
+      color: #ef4444;
+    }
+
+    .boss-timer {
+      margin-left: auto;
+      font-family: monospace;
+    }
+
+    .soon {
+      border-color: #facc15;
+      box-shadow: 0 0 10px #facc15;
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <img src="assets/images/h7-logo.png" alt="H7 Alliance Logo" />
+<header>
+  <div class="logo">
+    <img src="assets/images/h7-logo.png" alt="H7 Alliance Logo">
     <h1>H7 ALLIANCE BOSS SPAWN TIMER</h1>
-  </header>
-
-  <div class="container">
-    <div class="top-actions">
-      <button onclick="loginAdmin()">Admin Login</button>
-    </div>
-
-    <div id="boss-list" class="boss-grid"></div>
   </div>
+  <button class="admin-btn" onclick="loginAdmin()">Admin Login</button>
+</header>
 
-  <footer>
-    All times based on Asia / Manila (UTC+8)
-  </footer>
+<div class="note">
+  All times based on Asia / Manila (UTC+8)
+</div>
 
-  <script src="script.js"></script>
+<div class="boss-list" id="boss-list">
+  <!-- Bosses will be rendered here by script.js -->
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>

@@ -2,84 +2,94 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>H7 Alliance Boss Spawn Timer</title>
+<title>H7 ALLIANCE BOSS SPAWN TIMER</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: radial-gradient(circle at top, #0b1220, #05080f);
-  color: #fff;
+    margin: 0;
+    background: #0b0f14;
+    color: #e6edf3;
+    font-family: "Segoe UI", Arial, sans-serif;
 }
-
 header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 24px;
-  border-bottom: 1px solid #1f2a44;
+    padding: 20px;
+    background: linear-gradient(180deg,#10151c,#0b0f14);
+    border-bottom: 1px solid #1f2a36;
 }
-
-header h1 {
-  font-size: 18px;
-  margin: 0;
-  letter-spacing: 1px;
+h1 {
+    margin: 0;
+    font-size: 26px;
+    letter-spacing: 1px;
 }
-
 .sub {
-  text-align: center;
-  font-size: 12px;
-  color: #8aa2c0;
-  margin: 10px 0 20px;
+    color: #8fb3d9;
+    font-size: 14px;
+}
+.admin-btn {
+    float: right;
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
 }
 
-button {
-  cursor: pointer;
-  background: #fff;
-  color: #000;
-  border: none;
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-size: 12px;
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
 }
-
-#bossList {
-  max-width: 900px;
-  margin: auto;
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #1f2a36;
+    text-align: center;
 }
-
-.boss {
-  background: linear-gradient(145deg, #0f172a, #0b1220);
-  border: 1px solid #1f2a44;
-  border-radius: 10px;
-  padding: 14px;
-  margin-bottom: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+th {
+    background: #141b24;
+    color: #7dd3fc;
 }
-
-.boss-name {
-  color: #ff4d4d;
-  font-weight: bold;
+tr:hover {
+    background: #0f1720;
 }
-
-.timer {
-  font-family: monospace;
+.boss-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
-
-.highlight {
-  box-shadow: 0 0 15px #ff4444;
-  border-color: #ff4444;
+.boss-cell img {
+    width: 46px;
+    height: 46px;
+    border-radius: 6px;
+    object-fit: cover;
 }
-
-.admin-only {
-  display: none;
+.countdown {
+    background: #7f1d1d;
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 14px;
+    font-weight: bold;
+    display: inline-block;
 }
-
-footer {
-  height: 40px;
+.spawn-soon {
+    background: #f59e0b !important;
+    color: #000;
+}
+.action-btn {
+    background: #334155;
+    color: #fff;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    margin: 2px;
+}
+.action-btn:hover {
+    background: #475569;
+}
+.hidden {
+    display: none;
 }
 </style>
 </head>
@@ -87,137 +97,136 @@ footer {
 <body>
 
 <header>
-  <h1>H7 ALLIANCE BOSS SPAWN TIMER</h1>
-  <button onclick="adminLogin()">Admin Login</button>
+    <button class="admin-btn" onclick="adminLogin()">Admin Login</button>
+    <h1>H7 ALLIANCE BOSS SPAWN TIMER</h1>
+    <div class="sub">All times based on Asia / Manila (UTC+8)</div>
 </header>
 
-<div class="sub">All times based on Asia / Manila (UTC+8)</div>
-
-<div id="bossList"></div>
-<footer></footer>
+<table>
+<thead>
+<tr>
+    <th>LV</th>
+    <th>BOSS</th>
+    <th>DAY</th>
+    <th>INDO +7</th>
+    <th>PH +8</th>
+    <th>COUNTDOWN</th>
+    <th>TIME STAMP</th>
+    <th>ACTION</th>
+</tr>
+</thead>
+<tbody id="bossTable"></tbody>
+</table>
 
 <script>
-const ADMIN_USER = "admin";
-const ADMIN_PASS = "H7bossings";
+const ADMIN_PASSWORD = "H7bossings";
 let isAdmin = false;
 
-const BOSSES = [
-  { name:"Venatus", interval:10 },
-  { name:"Viorent", interval:10 },
-  { name:"Ego", interval:21 },
-  { name:"Livera", interval:24 },
-  { name:"Araneo", interval:24 },
-  { name:"Undomiel", interval:24 },
-  { name:"Lady Dalia", interval:18 },
-  { name:"General Aquleus", interval:29 },
-  { name:"Amentis", interval:29 },
-  { name:"Baron Braudmore", interval:32 },
-  { name:"Gareth", interval:32 },
-  { name:"Shuliar", interval:35 },
-  { name:"Larba", interval:35 },
-  { name:"Catena", interval:35 },
-  { name:"Titore", interval:37 },
-  { name:"Wannitas", interval:48 },
-  { name:"Metus", interval:48 },
-  { name:"Duplican", interval:48 },
-  { name:"Secreta", interval:62 },
-  { name:"Ordo", interval:62 },
-  { name:"Asta", interval:62 },
-  { name:"Supore", interval:62 },
-
-  { name:"Clemantis", fixed:["Mon 13:30","Thu 21:00"] },
-  { name:"Saphirus", fixed:["Sun 19:00","Tue 13:30"] },
-  { name:"Thymele", fixed:["Mon 21:00","Wed 13:30"] },
-  { name:"Auraq", fixed:["Fri 00:00","Wed 23:00"] },
-  { name:"Milavy", fixed:["Sat 17:00"] },
-  { name:"Ringor", fixed:["Sat 19:00"] },
-  { name:"Roderick", fixed:["Fri 21:00"] },
-  { name:"Chaiflock", fixed:["Sat 00:00"] },
-  { name:"Benji", fixed:["Sun 23:00"] },
-  { name:"Icaruthia", fixed:["Tue 23:00","Fri 23:00"] },
-  { name:"Motti", fixed:["Wed 21:00","Sat 21:00"] },
-  { name:"Nevaeh", fixed:["Sun 00:00"] }
+/* LOCKED ORDER – DO NOT CHANGE */
+const bosses = [
+ {lv:60,name:"Venatus"},
+ {lv:65,name:"Viorent"},
+ {lv:70,name:"Ego"},
+ {lv:75,name:"Clemantis"},
+ {lv:75,name:"Livera"},
+ {lv:75,name:"Araneo"},
+ {lv:80,name:"Undomiel"},
+ {lv:85,name:"Saphirus"},
+ {lv:85,name:"Neutro"},
+ {lv:85,name:"Lady Dalia"},
+ {lv:85,name:"General Aquleus"},
+ {lv:85,name:"Thymele"},
+ {lv:88,name:"Amentis"},
+ {lv:88,name:"Baron Braudmore"},
+ {lv:90,name:"Milavy"},
+ {lv:93,name:"Wannitas"},
+ {lv:93,name:"Metus"},
+ {lv:93,name:"Duplican"},
+ {lv:95,name:"Shuliar"},
+ {lv:95,name:"Ringor"},
+ {lv:95,name:"Roderick"},
+ {lv:98,name:"Gareth"},
+ {lv:98,name:"Titore"},
+ {lv:98,name:"Larba"},
+ {lv:100,name:"Catena"},
+ {lv:100,name:"Auraq"},
+ {lv:100,name:"Secreta"},
+ {lv:100,name:"Ordo"},
+ {lv:100,name:"Asta"},
+ {lv:100,name:"Supore"},
+ {lv:100,name:"Benji"},
+ {lv:100,name:"Icaruthia"},
+ {lv:100,name:"Motti"},
+ {lv:100,name:"Nevaeh"},
+ {lv:100,name:"Chaiflock"}
 ];
 
-function nowPH() {
-  return new Date(new Date().toLocaleString("en-US",{timeZone:"Asia/Manila"}));
-}
-
-function nextFixedTime(list) {
-  const now = nowPH();
-  let best = null;
-
-  list.forEach(t => {
-    const [d, hm] = t.split(" ");
-    const [h, m] = hm.split(":").map(Number);
-    const dayIndex = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].indexOf(d);
-    let dt = new Date(now);
-    dt.setHours(h, m, 0, 0);
-    dt.setDate(dt.getDate() + ((dayIndex - dt.getDay() + 7) % 7));
-    if (dt <= now) dt.setDate(dt.getDate() + 7);
-    if (!best || dt < best) best = dt;
-  });
-  return best;
-}
-
 function adminLogin() {
-  const u = prompt("Username:");
-  const p = prompt("Password:");
-  if (u === ADMIN_USER && p === ADMIN_PASS) {
-    isAdmin = true;
-    document.querySelectorAll(".admin-only").forEach(b => b.style.display="inline-block");
-    alert("Admin access granted");
-  } else alert("Invalid login");
+    const pass = prompt("Enter admin password:");
+    if (pass === ADMIN_PASSWORD) {
+        isAdmin = true;
+        alert("Admin access granted");
+        render();
+    } else {
+        alert("Wrong password");
+    }
+}
+
+function formatCountdown(ms) {
+    if (ms <= 0) return "SPAWNED";
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor(ms % 3600000 / 60000);
+    const s = Math.floor(ms % 60000 / 1000);
+    return `${h}h ${m}m ${s}s`;
 }
 
 function render() {
-  const list = document.getElementById("bossList");
-  list.innerHTML = "";
+    const now = new Date();
+    const tbody = document.getElementById("bossTable");
+    tbody.innerHTML = "";
 
-  BOSSES.forEach(b => {
-    const box = document.createElement("div");
-    box.className = "boss";
+    bosses.forEach((b, i) => {
+        const spawn = new Date(now.getTime() + (i+1)*3600000);
+        const diff = spawn - now;
 
-    let next;
-    if (b.interval) {
-      const last = Number(localStorage[b.name] || Date.now());
-      next = new Date(last + b.interval*3600000);
-    } else {
-      next = nextFixedTime(b.fixed);
-    }
+        const tr = document.createElement("tr");
 
-    const diff = next - nowPH();
-    if (diff <= 300000 && diff > 0) box.classList.add("highlight");
+        const cdClass = diff < 300000 ? "countdown spawn-soon" : "countdown";
 
-    const t = diff > 0
-      ? new Date(diff).toISOString().substr(11,8)
-      : "SPAWNED";
-
-    box.innerHTML = `
-      <div class="boss-name">${b.name}</div>
-      <div class="timer">${t}</div>
-      <div>
-        <button class="admin-only" onclick="resetBoss('${b.name}',${b.interval||0})">Reset</button>
-        ${b.fixed && b.fixed.length>1 ? `<button class="admin-only" onclick="nextDay('${b.name}')">Next Day</button>`:""}
-      </div>
-    `;
-    list.appendChild(box);
-  });
-}
-
-function resetBoss(name, interval) {
-  if (!isAdmin) return;
-  if (interval) localStorage[name] = Date.now();
-}
-
-function nextDay(name) {
-  if (!isAdmin) return;
-  const b = BOSSES.find(x=>x.name===name);
-  b.fixed.push(b.fixed.shift());
+        tr.innerHTML = `
+        <td>${b.lv}</td>
+        <td>
+            <div class="boss-cell">
+                <img src="images/boss${String(i+1).padStart(2,"0")}.png">
+                ${b.name}
+            </div>
+        </td>
+        <td>${spawn.toLocaleDateString("en-US",{weekday:"short"})}</td>
+        <td>${new Date(spawn.getTime()-3600000).toLocaleTimeString()}</td>
+        <td>${spawn.toLocaleTimeString()}</td>
+        <td><span class="${cdClass}">${formatCountdown(diff)}</span></td>
+        <td>${spawn.toLocaleString()}</td>
+        <td>
+            ${isAdmin ? `
+            <button class="action-btn">Reset</button>
+            <button class="action-btn">Next Day</button>` : ""}
+        </td>`;
+        tbody.appendChild(tr);
+    });
 }
 
 setInterval(render,1000);
 render();
+
+/* DISCORD WEBHOOK (OPTIONAL)
+function sendDiscordAlert(boss) {
+ fetch("YOUR_WEBHOOK_URL",{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify({content:`${boss} spawning soon!`})
+ });
+}
+*/
 </script>
 
 </body>

@@ -49,22 +49,34 @@ table{
   width:100%;
   border-collapse:collapse;
   background:rgba(0,0,0,.65);
+  table-layout:fixed;
 }
 
 th,td{
   padding:10px;
   border-bottom:1px solid rgba(255,255,255,.08);
+  font-size:13px;
+  vertical-align:middle;
 }
 
 th{
   color:#fde68a;
-  font-size:13px;
+  text-align:center;
 }
 
 td{
-  font-size:13px;
+  text-align:center;
 }
 
+/* Column sizing */
+th:nth-child(1), td:nth-child(1){ width:60px; }     /* LV */
+th:nth-child(2), td:nth-child(2){ width:260px; text-align:left; }
+th:nth-child(3), td:nth-child(3){ width:90px; }
+th:nth-child(4), td:nth-child(4){ width:120px; }
+th:nth-child(5), td:nth-child(5){ width:160px; }
+th:nth-child(6), td:nth-child(6){ width:90px; }
+
+/* Boss cell */
 .boss-cell{
   display:flex;
   align-items:center;
@@ -77,29 +89,36 @@ td{
   border-radius:6px;
 }
 
-.spawned{
-  background:var(--green);
-  padding:4px 10px;
+/* Status */
+.spawned,
+.countdown{
+  display:inline-block;
+  width:120px;
+  padding:6px 0;
   border-radius:6px;
   font-weight:bold;
   text-align:center;
+}
+
+.spawned{
+  background:var(--green);
 }
 
 .countdown{
   background:var(--red);
-  padding:4px 10px;
-  border-radius:6px;
-  font-weight:bold;
-  text-align:center;
-  min-width:90px;
 }
 
-@media(max-width:650px){
+@media(max-width:700px){
   th:nth-child(1),td:nth-child(1),
   th:nth-child(3),td:nth-child(3){
     display:none;
   }
+
+  th:nth-child(6),td:nth-child(6){
+    width:70px;
+  }
 }
+
 </style>
 </head>
 

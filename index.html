@@ -6,85 +6,98 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body {
-  margin: 0;
-  background: #3b0a0a; /* dark red */
-  color: #000;
-  font-family: Arial, sans-serif;
+:root{
+  --bg-main:#2b1208;
+  --bg-dark:#120805;
+  --accent:#7a1d14;
+  --green:#16a34a;
+  --red:#991b1b;
 }
 
-header {
-  padding: 14px;
-  background: #3b0a0a;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  color:#f1f5f9;
+  background:
+    linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,.65)),
+    url("images/h7.png") center/cover no-repeat,
+    var(--bg-main);
 }
 
-h1 {
-  font-size: 16px;
-  margin: 0;
-  color: #fff;
+header{
+  background:linear-gradient(to right,#4a0f0f,#7a1d14);
+  padding:14px 18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
 
-button {
-  background: #fff;
-  border: none;
-  color: #000;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
+header h1{
+  font-size:16px;
+  margin:0;
+  letter-spacing:.5px;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-  background: #fff;
+button{
+  background:#2563eb;
+  border:none;
+  color:white;
+  padding:6px 12px;
+  border-radius:6px;
+  cursor:pointer;
 }
 
-th, td {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:rgba(0,0,0,.65);
 }
 
-th {
-  background: #f3f3f3;
+th,td{
+  padding:10px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+  text-align:left;
 }
 
-.boss-cell {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+th{
+  color:#fde68a;
+  font-size:13px;
 }
 
-.boss-img {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  object-fit: cover;
+td{
+  font-size:13px;
 }
 
-.spawned {
-  background: #16a34a;
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-weight: bold;
-  text-align: center;
+.boss-cell{
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
 
-.countdown {
-  background: #991b1b;
-  color: #fff;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-weight: bold;
-  text-align: center;
+.boss-img{
+  width:36px;
+  height:36px;
+  border-radius:6px;
 }
 
-@media(max-width:600px){
+.spawned{
+  background:var(--green);
+  padding:4px 10px;
+  border-radius:6px;
+  font-weight:bold;
+  text-align:center;
+}
+
+.countdown{
+  background:var(--red);
+  padding:4px 10px;
+  border-radius:6px;
+  font-weight:bold;
+  text-align:center;
+  min-width:90px;
+}
+
+@media(max-width:650px){
   th:nth-child(1),td:nth-child(1),
   th:nth-child(3),td:nth-child(3){
     display:none;
@@ -96,7 +109,7 @@ th {
 <body>
 
 <header>
-  <h1>H7 ALLIANCE – BOSS SPAWN TIMER</h1>
+  <h1>H7 ALLIANCE – BOSS SPAWN TIMER (LOCAL TIME)</h1>
   <button onclick="adminLogin()">Admin</button>
 </header>
 
@@ -116,151 +129,120 @@ th {
 
 <script>
 /* ===== ADMIN ===== */
-const ADMIN_USER = "legendweapon";
-const ADMIN_PASS = "legendweapon";
-let isAdmin = localStorage.getItem("admin") === "1";
-
-/* ===== TIMEZONE ===== */
-const PH_OFFSET = 8 * 60; // UTC+8
-
-function nowPH() {
-  const now = new Date();
-  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-  return new Date(utc + PH_OFFSET * 60000);
-}
+const ADMIN_USER="legendweapon";
+const ADMIN_PASS="legendweapon";
+let isAdmin=localStorage.getItem("admin")==="1";
 
 /* ===== BOSSES ===== */
-const bosses = [
-  { lv:60, name:"Venatus", img:"venatus.png", interval:10 },
-  { lv:65, name:"Viorent", img:"viorent.png", interval:10 },
-  { lv:70, name:"Ego", img:"ego.png", interval:21 },
-
-  { lv:75, name:"Clemantis", img:"clemantis.png",
-    schedule:[{d:1,t:"13:30"},{d:4,t:"21:00"}] },
-
-  { lv:75, name:"Livera", img:"livera.png", interval:24 },
-  { lv:80, name:"Araneo", img:"araneo.png", interval:24 },
-  { lv:80, name:"Undomiel", img:"undomiel.png", interval:24 },
-
-  { lv:82, name:"Saphirus", img:"saphirus.png",
-    schedule:[{d:0,t:"19:00"},{d:2,t:"13:30"}] },
-
-  { lv:85, name:"Lady Dalia", img:"ladydalia.png", interval:18 },
-  { lv:85, name:"General Aquleus", img:"generalaquelus.png", interval:29 },
-  { lv:86, name:"Thymele", img:"thymele.png",
-    schedule:[{d:1,t:"21:00"},{d:3,t:"13:30"}] },
-
-  { lv:88, name:"Amentis", img:"amentis.png", interval:29 },
-  { lv:88, name:"Baron Braudmore", img:"baronbraudmore.png", interval:32 },
-  { lv:90, name:"Milavy", img:"milavy.png", schedule:[{d:6,t:"17:00"}] },
-
-  { lv:92, name:"Wannitas", img:"wannitas.png", interval:48 },
-  { lv:93, name:"Metus", img:"metus.png", interval:48 },
-  { lv:94, name:"Duplican", img:"duplican.png", interval:48 },
-
-  { lv:95, name:"Shulliar", img:"shulliar.png", interval:35 },
-  { lv:96, name:"Ringor", img:"ringor.png", schedule:[{d:6,t:"19:00"}] },
-  { lv:97, name:"Roderick", img:"roderick.png", schedule:[{d:5,t:"21:00"}] },
-
-  { lv:98, name:"Gareth", img:"gareth.png", interval:32 },
-  { lv:98, name:"Titore", img:"titore.png", interval:37 },
-  { lv:99, name:"Larba", img:"larba.png", interval:35 },
-
-  { lv:100, name:"Catena", img:"catena.png", interval:35 },
-  { lv:100, name:"Auraq", img:"auraq.png",
-    schedule:[{d:5,t:"00:00"},{d:3,t:"23:00"}] },
-
-  { lv:100, name:"Secreta", img:"secreta.png", interval:62 },
-  { lv:100, name:"Ordo", img:"ordo.png", interval:62 },
-  { lv:100, name:"Asta", img:"asta.png", interval:62 },
-  { lv:100, name:"Supore", img:"supore.png", interval:62 },
-
-  { lv:100, name:"Chaiflock", img:"chaiflock.png", schedule:[{d:6,t:"00:00"}] },
-  { lv:100, name:"Benji", img:"benji.png", schedule:[{d:0,t:"23:00"}] },
-
-  { lv:100, name:"Icaruthia", img:"icaruthia.png",
-    schedule:[{d:2,t:"23:00"},{d:5,t:"23:00"}] },
-
-  { lv:100, name:"Motti", img:"motti.png",
-    schedule:[{d:3,t:"21:00"},{d:6,t:"21:00"}] },
-
-  { lv:100, name:"Nevaeh", img:"nevaeh.png", schedule:[{d:0,t:"00:00"}] },
-
-  /* ✅ TUMIER */
-  { lv:100, name:"Tumier", img:"tumier.png",
-    schedule:[{d:0,t:"21:00"}] }
+const bosses=[
+ {lv:60,name:"Venatus",img:"venatus.png",interval:10},
+ {lv:65,name:"Viorent",img:"viorent.png",interval:10},
+ {lv:70,name:"Ego",img:"ego.png",interval:21},
+ {lv:75,name:"Clemantis",img:"clemantis.png",fixed:[[1,"13:30"],[4,"21:00"]]},
+ {lv:75,name:"Livera",img:"livera.png",interval:24},
+ {lv:80,name:"Araneo",img:"araneo.png",interval:24},
+ {lv:80,name:"Undomiel",img:"undomiel.png",interval:24},
+ {lv:82,name:"Saphirus",img:"saphirus.png",fixed:[[0,"19:00"],[2,"13:30"]]},
+ {lv:85,name:"Lady Dalia",img:"ladydalia.png",interval:18},
+ {lv:85,name:"General Aquleus",img:"generalaquelus.png",interval:29},
+ {lv:86,name:"Thymele",img:"thymele.png",fixed:[[1,"21:00"],[3,"13:30"]]},
+ {lv:88,name:"Amentis",img:"amentis.png",interval:29},
+ {lv:88,name:"Baron Braudmore",img:"baronbraudmore.png",interval:32},
+ {lv:90,name:"Milavy",img:"milavy.png",fixed:[[6,"17:00"]]},
+ {lv:92,name:"Wannitas",img:"wannitas.png",interval:48},
+ {lv:93,name:"Metus",img:"metus.png",interval:48},
+ {lv:94,name:"Duplican",img:"duplican.png",interval:48},
+ {lv:95,name:"Shulliar",img:"shulliar.png",interval:35},
+ {lv:96,name:"Ringor",img:"ringor.png",fixed:[[6,"19:00"]]},
+ {lv:97,name:"Roderick",img:"roderick.png",fixed:[[5,"21:00"]]},
+ {lv:98,name:"Gareth",img:"gareth.png",interval:32},
+ {lv:98,name:"Titore",img:"titore.png",interval:37},
+ {lv:99,name:"Larba",img:"larba.png",interval:35},
+ {lv:100,name:"Catena",img:"catena.png",interval:35},
+ {lv:100,name:"Auraq",img:"auraq.png",fixed:[[5,"00:00"],[3,"23:00"]]},
+ {lv:100,name:"Secreta",img:"secreta.png",interval:62},
+ {lv:100,name:"Ordo",img:"ordo.png",interval:62},
+ {lv:100,name:"Asta",img:"asta.png",interval:62},
+ {lv:100,name:"Supore",img:"supore.png",interval:62},
+ {lv:100,name:"Chaiflock",img:"chaiflock.png",fixed:[[6,"00:00"]]},
+ {lv:100,name:"Benji",img:"benji.png",fixed:[[0,"23:00"]]},
+ {lv:100,name:"Icaruthia",img:"icaruthia.png",fixed:[[2,"23:00"],[5,"23:00"]]},
+ {lv:100,name:"Motti",img:"motti.png",fixed:[[3,"21:00"],[6,"21:00"]]},
+ {lv:100,name:"Nevaeh",img:"nevaeh.png",fixed:[[0,"00:00"]]},
+ {lv:100,name:"Tumier",img:"tumier.png",fixed:[[0,"21:00"]]}
 ];
+
+const table=document.getElementById("bossTable");
 
 /* ===== ADMIN LOGIN ===== */
 function adminLogin(){
   if(isAdmin){
     localStorage.removeItem("admin");
     isAdmin=false;
-    alert("Logged out");
-    render();
-    return;
+    return render();
   }
   const u=prompt("Username");
   const p=prompt("Password");
   if(u===ADMIN_USER && p===ADMIN_PASS){
     localStorage.setItem("admin","1");
     isAdmin=true;
-    alert("Admin enabled");
     render();
-  }
+  }else alert("Wrong login");
 }
 
-/* ===== NEXT SPAWN ===== */
-function nextSpawn(b,i){
-  const saved = localStorage.getItem("next_"+i);
-  if(saved) return new Date(saved);
-
-  const base = nowPH();
-
-  if(b.interval){
-    return new Date(base.getTime() + b.interval*3600000);
-  }
-
-  let soonest = null;
-  b.schedule.forEach(s=>{
-    const d = new Date(base);
-    const [h,m]=s.t.split(":");
-    d.setHours(h,m,0,0);
-    d.setDate(d.getDate()+((7+s.d-d.getDay())%7));
-    if(d<=base) d.setDate(d.getDate()+7);
-    if(!soonest || d<soonest) soonest=d;
+/* ===== NEXT FIXED ===== */
+function nextFixed(list){
+  const now=new Date();
+  let soon=null;
+  list.forEach(([d,t])=>{
+    const [h,m]=t.split(":");
+    let x=new Date(now);
+    x.setHours(h,m,0,0);
+    x.setDate(x.getDate()+((7+d-x.getDay())%7));
+    if(x<=now) x.setDate(x.getDate()+7);
+    if(!soon||x<soon) soon=x;
   });
-  return soonest;
+  return soon;
 }
 
 /* ===== RESET ===== */
 function resetBoss(i){
-  if(!isAdmin) return alert("Admin only");
-  const n = nextSpawn(bosses[i],i);
-  localStorage.setItem("next_"+i,n.toISOString());
+  if(!isAdmin) return;
+  const b=bosses[i];
+  const now=new Date();
+  let next;
+  if(b.interval) next=new Date(now.getTime()+b.interval*3600000);
+  else next=nextFixed(b.fixed);
+  localStorage.setItem("next_"+i,next.toISOString());
   render();
 }
 
 /* ===== RENDER ===== */
-const table=document.getElementById("bossTable");
-
 function render(){
   table.innerHTML="";
   bosses.forEach((b,i)=>{
-    const n = nextSpawn(b,i);
-    const diff = n - nowPH();
+    let next=localStorage.getItem("next_"+i);
+    if(!next){
+      next=b.interval
+        ? new Date(Date.now()+b.interval*3600000)
+        : nextFixed(b.fixed);
+      localStorage.setItem("next_"+i,next.toISOString());
+    }else next=new Date(next);
 
-    const status = diff<=0
-      ? `<div class="spawned">SPAWNED</div>`
-      : `<div class="countdown">${Math.floor(diff/3600000)}h ${Math.floor(diff/60000)%60}m</div>`;
+    const diff=next-new Date();
+    const h=Math.floor(diff/3600000);
+    const m=Math.floor((diff%3600000)/60000);
 
     table.innerHTML+=`
 <tr>
 <td>${b.lv}</td>
-<td class="boss-cell"><img class="boss-img" src="images/${b.img}">${b.name}</td>
-<td>-</td>
-<td>-</td>
-<td>${status}</td>
+<td class="boss-cell">
+  <img class="boss-img" src="images/${b.img}">
+  ${b.name}
+</td>
+<td>${next.toLocaleDateString(undefined,{weekday:"short"})}</td>
+<td>${next.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</td>
+<td>${diff>0?`<div class="countdown">${h}h ${m}m</div>`:`<div class="spawned">SPAWNED</div>`}</td>
 <td>${isAdmin?`<button onclick="resetBoss(${i})">Reset</button>`:"-"}</td>
 </tr>`;
   });

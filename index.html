@@ -131,7 +131,7 @@ td{
 /* ===== ADMIN ===== */
 const ADMIN_USER="legendweapon";
 const ADMIN_PASS="legendweapon";
-let isAdmin = localStorage.getItem("admin")==="1";
+let isAdmin=localStorage.getItem("admin")==="1";
 
 /* ===== BOSSES ===== */
 const bosses=[
@@ -187,14 +187,13 @@ function adminLogin(){
     localStorage.setItem("admin","1");
     isAdmin=true;
     render();
-  } else alert("Wrong login");
+  }else alert("Wrong login");
 }
 
-/* ===== NEXT FIXED TIME ===== */
+/* ===== NEXT FIXED ===== */
 function nextFixed(list){
   const now=new Date();
   let soon=null;
-
   list.forEach(([d,t])=>{
     const [h,m]=t.split(":");
     let x=new Date(now);
@@ -203,24 +202,17 @@ function nextFixed(list){
     if(x<=now) x.setDate(x.getDate()+7);
     if(!soon||x<soon) soon=x;
   });
-
   return soon;
 }
 
-/* ===== RESET BOSS ===== */
+/* ===== RESET ===== */
 function resetBoss(i){
   if(!isAdmin) return;
-
   const b=bosses[i];
   const now=new Date();
   let next;
-
-  if(b.interval){
-    next=new Date(now.getTime()+b.interval*3600000);
-  }else{
-    next=nextFixed(b.fixed);
-  }
-
+  if(b.interval) next=new Date(now.getTime()+b.interval*3600000);
+  else next=nextFixed(b.fixed);
   localStorage.setItem("next_"+i,next.toISOString());
   render();
 }
@@ -228,27 +220,18 @@ function resetBoss(i){
 /* ===== RENDER ===== */
 function render(){
   table.innerHTML="";
-
   bosses.forEach((b,i)=>{
-    const saved=localStorage.getItem("next_"+i);
-    let statusHTML=`<div class="spawned">SPAWNED</div>`;
-    let day="-";
-    let time="-";
+    let next=localStorage.getItem("next_"+i);
+    if(!next){
+      next=b.interval
+        ? new Date(Date.now()+b.interval*3600000)
+        : nextFixed(b.fixed);
+      localStorage.setItem("next_"+i,next.toISOString());
+    }else next=new Date(next);
 
-    if(saved){
-      const next=new Date(saved);
-      const diff=next-new Date();
-
-      if(diff>0){
-        const h=Math.floor(diff/3600000);
-        const m=Math.floor((diff%3600000)/60000);
-        statusHTML=`<div class="countdown">${h}h ${m}m</div>`;
-        day=next.toLocaleDateString(undefined,{weekday:"short"});
-        time=next.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
-      }else{
-        localStorage.removeItem("next_"+i);
-      }
-    }
+    const diff=next-new Date();
+    const h=Math.floor(diff/3600000);
+    const m=Math.floor((diff%3600000)/60000);
 
     table.innerHTML+=`
 <tr>
@@ -257,9 +240,9 @@ function render(){
   <img class="boss-img" src="images/${b.img}">
   ${b.name}
 </td>
-<td>${day}</td>
-<td>${time}</td>
-<td>${statusHTML}</td>
+<td>${next.toLocaleDateString(undefined,{weekday:"short"})}</td>
+<td>${next.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</td>
+<td>${diff>0?`<div class="countdown">${h}h ${m}m</div>`:`<div class="spawned">SPAWNED</div>`}</td>
 <td>${isAdmin?`<button onclick="resetBoss(${i})">Reset</button>`:"-"}</td>
 </tr>`;
   });
@@ -271,4 +254,3 @@ render();
 
 </body>
 </html>
-

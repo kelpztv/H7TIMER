@@ -2,29 +2,46 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>H7 Alliance Boss Timer</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Midnight Boss Spawn Timer</title>
 
 <style>
+/* ===== GLOBAL ===== */
 body {
   margin: 0;
-  background: #0b0f14;
-  color: #e6edf3;
-  font-family: "Segoe UI", Arial, sans-serif;
+  background: #5b0f0f;
+  font-family: Arial, sans-serif;
+  color: #000;
 }
 
-header {
+.container {
+  max-width: 1200px;
+  margin: auto;
   padding: 16px;
-  background: linear-gradient(180deg,#10151c,#0b0f14);
-  border-bottom: 1px solid #1f2937;
 }
 
-h1 {
+/* ===== HEADER ===== */
+header {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+header h1 {
   margin: 0;
-  font-size: 22px;
-  letter-spacing: 1px;
 }
 
+/* ===== PANELS ===== */
+.panel {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+/* ===== TABLE ===== */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -32,165 +49,212 @@ table {
 
 th, td {
   padding: 10px;
-  border-bottom: 1px solid #1f2937;
+  border-bottom: 1px solid #ddd;
   text-align: left;
-  font-size: 14px;
 }
 
 th {
-  color: #8fb3d9;
-  font-weight: 600;
+  font-weight: bold;
 }
 
-.boss-cell {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.boss-img {
-  width: 42px;
-  height: 42px;
+/* ===== COUNTDOWN ===== */
+.countdown {
+  background: #b11212;
+  color: #fff;
+  padding: 8px;
   border-radius: 6px;
-  object-fit: cover;
-  border: 1px solid #2a3a4a;
-  background: #000;
+  text-align: center;
+  font-weight: bold;
 }
 
 .spawned {
-  background: #1f8f3a;
-  color: white;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-weight: 600;
-  text-align: center;
+  background: #8b0000;
 }
 
-.countdown {
-  background: #9b1c1c;
-  color: white;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-weight: 600;
-  text-align: center;
-}
-
+/* ===== BUTTONS ===== */
 button {
-  background: #2563eb;
+  padding: 8px 12px;
   border: none;
-  color: white;
-  padding: 6px 12px;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 600;
 }
 
-button:hover {
-  opacity: 0.9;
+.reset-btn {
+  background: #1e90ff;
+  color: white;
+  display: none;
+}
+
+.admin-btn {
+  background: #333;
+  color: #fff;
+}
+
+/* ===== ADMIN MODE ===== */
+body.admin .reset-btn {
+  display: inline-block;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  tr {
+    margin-bottom: 16px;
+  }
+
+  th {
+    display: none;
+  }
+
+  td {
+    padding: 8px 0;
+  }
 }
 </style>
 </head>
 
 <body>
 
+<div class="container">
+
 <header>
-  <h1>H7 ALLIANCE – BOSS SPAWN TIMER (LOCAL TIME)</h1>
+  <h1>MIDNIGHT BOSS SPAWN TIMER</h1>
+  <p id="timezone"></p>
+  <button class="admin-btn" onclick="adminLogin()">Admin Login</button>
 </header>
 
-<table>
-<thead>
-<tr>
-  <th>LV</th>
-  <th>BOSS</th>
-  <th>DAY</th>
-  <th>SPAWN TIME</th>
-  <th>STATUS</th>
-  <th>ACTION</th>
-</tr>
-</thead>
+<div class="panel">
+  <table>
+    <thead>
+      <tr>
+        <th>Boss</th>
+        <th>Spawn Time</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="bossTable"></tbody>
+  </table>
+</div>
 
-<tbody id="bossTable"></tbody>
-</table>
+</div>
 
 <script>
+/* ===== ADMIN CREDENTIALS ===== */
+const ADMIN_USER = "legendweapon";
+const ADMIN_PASS = "legendweapon";
+
+/* ===== TIMEZONE ===== */
+const userTZ = Intl.DateTimeFormat().resolvedOptions().timeZone;
+document.getElementById("timezone").innerText = "Your Timezone: " + userTZ;
+
+/* ===== BOSSES ===== */
 const bosses = [
- {lv:60,name:"Venatus",img:"venatus.png",day:1,time:"09:49"},
- {lv:65,name:"Viorent",img:"viorent.png",day:1,time:"09:41"},
- {lv:70,name:"Ego",img:"ego.png",day:1,time:"20:41"},
- {lv:75,name:"Clemantis",img:"clemantis.png",day:2,time:"23:41"},
- {lv:75,name:"Livera",img:"livera.png",day:2,time:"23:41"},
- {lv:80,name:"Araneo",img:"araneo.png",day:2,time:"23:41"},
- {lv:80,name:"Undomiel",img:"undomiel.png",day:2,time:"23:41"},
- {lv:82,name:"Saphirus",img:"saphirus.png",day:2,time:"23:41"},
- {lv:84,name:"Neutro",img:"neutro.png",day:1,time:"17:41"},
- {lv:85,name:"Lady Dalia",img:"ladydalia.png",day:1,time:"17:41"},
- {lv:85,name:"General Aquleus",img:"generalaquelus.png",day:2,time:"04:41"},
- {lv:86,name:"Thymele",img:"thymele.png",day:2,time:"04:41"},
- {lv:88,name:"Amentis",img:"amentis.png",day:2,time:"04:41"},
- {lv:88,name:"Baron Braudmore",img:"baronbraudmore.png",day:2,time:"07:41"},
- {lv:90,name:"Milavy",img:"milavy.png",day:2,time:"07:41"},
- {lv:92,name:"Wannitas",img:"wannitas.png",day:3,time:"23:41"},
- {lv:93,name:"Metus",img:"metus.png",day:3,time:"23:41"},
- {lv:94,name:"Duplican",img:"duplican.png",day:3,time:"23:41"},
- {lv:95,name:"Shulliar",img:"shulliar.png",day:2,time:"10:41"},
- {lv:96,name:"Ringor",img:"ringor.png",day:2,time:"10:41"},
- {lv:97,name:"Roderick",img:"roderick.png",day:2,time:"10:41"},
- {lv:98,name:"Gareth",img:"gareth.png",day:2,time:"10:41"},
- {lv:98,name:"Titore",img:"titore.png",day:2,time:"12:41"},
- {lv:99,name:"Larba",img:"larba.png",day:2,time:"12:41"},
- {lv:100,name:"Catena",img:"catena.png",day:2,time:"10:41"},
- {lv:100,name:"Auraq",img:"auraq.png",day:2,time:"10:41"},
- {lv:100,name:"Secreta",img:"secreta.png",day:2,time:"10:41"},
- {lv:100,name:"Ordo",img:"ordo.png",day:2,time:"10:41"},
- {lv:100,name:"Asta",img:"asta.png",day:2,time:"10:41"},
- {lv:100,name:"Supore",img:"supore.png",day:2,time:"10:41"},
- {lv:100,name:"Chaiflock",img:"chaiflock.png",day:2,time:"10:41"},
- {lv:100,name:"Benji",img:"benji.png",day:2,time:"10:41"},
- {lv:100,name:"Icaruthia",img:"icaruthia.png",day:2,time:"10:41"},
- {lv:100,name:"Motti",img:"motti.png",day:2,time:"10:41"},
- {lv:100,name:"Nevaeh",img:"nevaeh.png",day:2,time:"10:41"},
- {lv:100,name:"Tumier",img:"tumier.png",day:0,time:"21:00"}
+  {
+    name: "Tumier",
+    spawnDay: 0, // Sunday
+    spawnTime: "21:00",
+    remaining: null,
+    spawned: false
+  }
 ];
 
-const table = document.getElementById("bossTable");
+/* ===== HELPERS ===== */
+function getNextSpawn(boss) {
+  const now = new Date();
+  const spawn = new Date(now);
 
-function getNextSpawn(day,time){
-  const now=new Date();
-  const [h,m]=time.split(":");
-  let d=new Date(now);
-  d.setHours(h,m,0,0);
-  d.setDate(d.getDate()+((7+day-d.getDay())%7));
-  if(d<now)d.setDate(d.getDate()+7);
-  return d;
+  const [h, m] = boss.spawnTime.split(":");
+  spawn.setHours(h, m, 0, 0);
+
+  const diff = (boss.spawnDay - spawn.getDay() + 7) % 7;
+  spawn.setDate(spawn.getDate() + diff);
+
+  if (spawn < now) spawn.setDate(spawn.getDate() + 7);
+
+  return spawn;
 }
 
-function update(){
-  table.innerHTML="";
-  bosses.forEach((b,i)=>{
-    const spawn=getNextSpawn(b.day,b.time);
-    const diff=spawn-new Date();
-    const spawned=localStorage.getItem("spawned_"+i)==="1";
-    let status=spawned?'<div class="spawned">SPAWNED</div>':
-      diff<=0?'<div class="spawned">SPAWNED</div>':
-      `<div class="countdown">${Math.floor(diff/3600000)}h ${Math.floor(diff/60000)%60}m</div>`;
+function formatTime(ms) {
+  const s = Math.floor(ms / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return `${h}h ${m}m ${sec}s`;
+}
 
-    table.innerHTML+=`
-<tr>
-<td>${b.lv}</td>
-<td class="boss-cell">
-<img src="images/${b.img}" class="boss-img">
-${b.name}
-</td>
-<td>${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][b.day]}</td>
-<td>${b.time}</td>
-<td>${status}</td>
-<td><button onclick="localStorage.removeItem('spawned_${i}')">Reset</button></td>
-</tr>`;
+/* ===== RENDER ===== */
+function render() {
+  const tbody = document.getElementById("bossTable");
+  tbody.innerHTML = "";
+
+  bosses.forEach((boss, i) => {
+    if (!boss.remaining && !boss.spawned) {
+      boss.nextSpawn = getNextSpawn(boss);
+      boss.remaining = boss.nextSpawn - new Date();
+    }
+
+    let statusHTML = "";
+
+    if (boss.spawned) {
+      statusHTML = `<div class="countdown spawned">SPAWNED</div>`;
+    } else {
+      statusHTML = `<div class="countdown">${formatTime(boss.remaining)}</div>`;
+    }
+
+    const row = `
+      <tr>
+        <td>${boss.name}</td>
+        <td>${boss.spawnTime}</td>
+        <td>${statusHTML}</td>
+        <td>
+          <button class="reset-btn" onclick="resetBoss(${i})">Reset</button>
+        </td>
+      </tr>
+    `;
+
+    tbody.innerHTML += row;
   });
 }
 
-setInterval(update,1000);
-update();
+/* ===== TIMER ===== */
+setInterval(() => {
+  bosses.forEach(boss => {
+    if (!boss.spawned) {
+      boss.remaining -= 1000;
+      if (boss.remaining <= 0) {
+        boss.spawned = true;
+      }
+    }
+  });
+  render();
+}, 1000);
+
+/* ===== RESET ===== */
+function resetBoss(index) {
+  const boss = bosses[index];
+  boss.spawned = false;
+  boss.remaining = null;
+}
+
+/* ===== ADMIN LOGIN ===== */
+function adminLogin() {
+  const u = prompt("Username:");
+  const p = prompt("Password:");
+
+  if (u === ADMIN_USER && p === ADMIN_PASS) {
+    document.body.classList.add("admin");
+    alert("Admin access granted");
+  } else {
+    alert("Access denied");
+  }
+}
+
+/* INIT */
+render();
 </script>
 
 </body>

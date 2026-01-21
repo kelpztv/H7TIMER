@@ -45,35 +45,26 @@ button{
   cursor:pointer;
 }
 
-/* ===== TABLE ALIGNMENT (SAFE) ===== */
 table{
   width:100%;
   border-collapse:collapse;
   background:rgba(0,0,0,.65);
-  table-layout:fixed;
 }
 
 th,td{
   padding:10px;
   border-bottom:1px solid rgba(255,255,255,.08);
-  font-size:13px;
-  text-align:center;
-  vertical-align:middle;
 }
 
 th{
   color:#fde68a;
+  font-size:13px;
 }
 
-/* Column widths */
-th:nth-child(1),td:nth-child(1){width:60px;}
-th:nth-child(2),td:nth-child(2){width:260px;text-align:left;}
-th:nth-child(3),td:nth-child(3){width:90px;}
-th:nth-child(4),td:nth-child(4){width:130px;}
-th:nth-child(5),td:nth-child(5){width:160px;}
-th:nth-child(6),td:nth-child(6){width:90px;}
+td{
+  font-size:13px;
+}
 
-/* Boss cell */
 .boss-cell{
   display:flex;
   align-items:center;
@@ -84,30 +75,25 @@ th:nth-child(6),td:nth-child(6){width:90px;}
   width:36px;
   height:36px;
   border-radius:6px;
-  flex-shrink:0;
-}
-
-/* Status bars (fixed width – no timer impact) */
-.spawned,
-.countdown{
-  display:inline-block;
-  width:130px;
-  padding:6px 0;
-  border-radius:6px;
-  font-weight:bold;
-  text-align:center;
-  white-space:nowrap;
 }
 
 .spawned{
   background:var(--green);
+  padding:4px 10px;
+  border-radius:6px;
+  font-weight:bold;
+  text-align:center;
 }
 
 .countdown{
   background:var(--red);
+  padding:4px 10px;
+  border-radius:6px;
+  font-weight:bold;
+  text-align:center;
+  min-width:90px;
 }
 
-/* Mobile */
 @media(max-width:650px){
   th:nth-child(1),td:nth-child(1),
   th:nth-child(3),td:nth-child(3){
@@ -246,7 +232,11 @@ function render(){
 
   const rows=bosses.map((b,i)=>{
     const next=getBossNext(i);
-    return{b,i,next,diff:next-now,spawned:next<=now};
+    return{
+      b,i,next,
+      diff:next-now,
+      spawned:next<=now
+    };
   });
 
   const spawned=rows.filter(r=>r.spawned);
@@ -254,8 +244,9 @@ function render(){
   const ordered=[...spawned,...upcoming];
 
   ordered.forEach(r=>{
-    const h=Math.floor(r.diff/3600000);
-    const m=Math.floor((r.diff%3600000)/60000);
+    const diff=r.diff;
+    const h=Math.floor(diff/3600000);
+    const m=Math.floor((diff%3600000)/60000);
 
     table.innerHTML+=`
 <tr>

@@ -8,7 +8,6 @@
 <style>
 :root{
   --bg-main:#2b1208;
-  --bg-dark:#120805;
   --accent:#7a1d14;
   --green:#16a34a;
   --red:#991b1b;
@@ -35,13 +34,12 @@ header{
 header h1{
   font-size:16px;
   margin:0;
-  letter-spacing:.5px;
 }
 
 button{
   background:#2563eb;
   border:none;
-  color:white;
+  color:#fff;
   padding:6px 12px;
   border-radius:6px;
   cursor:pointer;
@@ -56,7 +54,6 @@ table{
 th,td{
   padding:10px;
   border-bottom:1px solid rgba(255,255,255,.08);
-  text-align:left;
 }
 
 th{
@@ -119,7 +116,7 @@ td{
   <th>LV</th>
   <th>BOSS</th>
   <th>DAY</th>
-  <th>TIME</th>
+  <th>SPAWN TIME</th>
   <th>STATUS</th>
   <th>ACTION</th>
 </tr>
@@ -131,7 +128,7 @@ td{
 /* ===== ADMIN ===== */
 const ADMIN_USER="legendweapon";
 const ADMIN_PASS="legendweapon";
-let isAdmin = localStorage.getItem("admin")==="1";
+let isAdmin=localStorage.getItem("admin")==="1";
 
 /* ===== BOSSES ===== */
 const bosses=[
@@ -194,7 +191,6 @@ function adminLogin(){
 function nextFixed(list){
   const now=new Date();
   let soon=null;
-
   list.forEach(([d,t])=>{
     const [h,m]=t.split(":");
     let x=new Date(now);
@@ -203,77 +199,69 @@ function nextFixed(list){
     if(x<=now) x.setDate(x.getDate()+7);
     if(!soon||x<soon) soon=x;
   });
-
   return soon;
+}
+
+/* ===== GET NEXT ===== */
+function getBossNext(i){
+  let next=localStorage.getItem("next_"+i);
+  if(next) return new Date(next);
+
+  const b=bosses[i];
+  let d;
+  if(b.interval){
+    d=new Date(Date.now()+b.interval*3600000);
+  }else{
+    d=nextFixed(b.fixed);
+  }
+  localStorage.setItem("next_"+i,d.toISOString());
+  return d;
 }
 
 /* ===== RESET ===== */
 function resetBoss(i){
   if(!isAdmin) return;
-  const b=bosses[i];
-  let next;
-
-  if(b.interval){
-    next=new Date(Date.now()+b.interval*3600000);
-  }else{
-    next=nextFixed(b.fixed);
-  }
-
-  localStorage.setItem("next_"+i,next.toISOString());
+  localStorage.removeItem("next_"+i);
   render();
 }
 
-/* ===== RENDER (SORTED) ===== */
+/* ===== RENDER ===== */
 function render(){
-  const now=new Date();
   table.innerHTML="";
+  const now=new Date();
 
   const rows=bosses.map((b,i)=>{
-    const raw=localStorage.getItem("next_"+i);
-    let next=null;
-
-    if(raw){
-      next=new Date(raw);
-      if(next<=now){
-        localStorage.removeItem("next_"+i);
-        next=null;
-      }
-    }
-
-    return {b,i,next};
+    const next=getBossNext(i);
+    return{
+      b,i,next,
+      diff:next-now,
+      spawned:next<=now
+    };
   });
 
-  rows.sort((a,b)=>{
-    if(!a.next && !b.next) return 0;
-    if(!a.next) return 1;
-    if(!b.next) return -1;
-    return a.next-b.next;
-  });
+  const spawned=rows.filter(r=>r.spawned);
+  const upcoming=rows.filter(r=>!r.spawned).sort((a,b)=>a.next-b.next);
+  const ordered=[...spawned,...upcoming];
 
-  rows.forEach(({b,i,next})=>{
-    let status=`<div class="spawned">SPAWNED</div>`;
-    let day="-",time="-";
-
-    if(next){
-      const diff=next-now;
-      const h=Math.floor(diff/3600000);
-      const m=Math.floor((diff%3600000)/60000);
-      status=`<div class="countdown">${h}h ${m}m</div>`;
-      day=next.toLocaleDateString(undefined,{weekday:"short"});
-      time=next.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
-    }
+  ordered.forEach(r=>{
+    const diff=r.diff;
+    const h=Math.floor(diff/3600000);
+    const m=Math.floor((diff%3600000)/60000);
 
     table.innerHTML+=`
 <tr>
-<td>${b.lv}</td>
+<td>${r.b.lv}</td>
 <td class="boss-cell">
-  <img class="boss-img" src="images/${b.img}">
-  ${b.name}
+  <img class="boss-img" src="images/${r.b.img}">
+  ${r.b.name}
 </td>
-<td>${day}</td>
-<td>${time}</td>
-<td>${status}</td>
-<td>${isAdmin?`<button onclick="resetBoss(${i})">Reset</button>`:"-"}</td>
+<td>${r.next.toLocaleDateString(undefined,{weekday:"short"})}</td>
+<td>${r.next.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</td>
+<td>${r.spawned
+  ? `<div class="spawned">SPAWNED</div>`
+  : `<div class="countdown">${h}h ${m}m</div>`}
+</td>
+<td>${isAdmin?`<button onclick="resetBoss(${r.i})">Reset</button>`:"-"}</td>
 </tr>`;
   });
 }
@@ -281,7 +269,6 @@ function render(){
 setInterval(render,1000);
 render();
 </script>
-
 
 </body>
 </html>

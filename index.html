@@ -14,20 +14,14 @@
   --red:#991b1b;
 }
 
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  color: #f1f5f9;
-
+body{
+  margin:0;
+  font-family:Arial,sans-serif;
+  color:#f1f5f9;
   background:
-    linear-gradient(
-      rgba(0,0,0,0.4),
-      rgba(0,0,0,0.55)
-    ),
-    url("images/h7.png") center center / cover no-repeat,
-    #2b1208;
-
-  min-height: 100vh;
+    linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,.65)),
+    url("images/h7.png") center/cover no-repeat,
+    var(--bg-main);
 }
 
 header{
@@ -137,7 +131,7 @@ td{
 /* ===== ADMIN ===== */
 const ADMIN_USER="legendweapon";
 const ADMIN_PASS="legendweapon";
-let isAdmin=localStorage.getItem("admin")==="1";
+let isAdmin = localStorage.getItem("admin")==="1";
 
 /* ===== BOSSES ===== */
 const bosses=[
@@ -193,13 +187,14 @@ function adminLogin(){
     localStorage.setItem("admin","1");
     isAdmin=true;
     render();
-  }else alert("Wrong login");
+  } else alert("Wrong login");
 }
 
-/* ===== NEXT FIXED ===== */
+/* ===== NEXT FIXED TIME ===== */
 function nextFixed(list){
   const now=new Date();
   let soon=null;
+
   list.forEach(([d,t])=>{
     const [h,m]=t.split(":");
     let x=new Date(now);
@@ -208,55 +203,54 @@ function nextFixed(list){
     if(x<=now) x.setDate(x.getDate()+7);
     if(!soon||x<soon) soon=x;
   });
+
   return soon;
 }
 
-/* ===== RESET ===== */
+/* ===== RESET BOSS ===== */
 function resetBoss(i){
   if(!isAdmin) return;
 
-  const b = bosses[i];
-  const now = new Date();
+  const b=bosses[i];
+  const now=new Date();
   let next;
 
   if(b.interval){
-    next = new Date(now.getTime() + b.interval * 3600000);
-  } else {
-    next = nextFixed(b.fixed);
+    next=new Date(now.getTime()+b.interval*3600000);
+  }else{
+    next=nextFixed(b.fixed);
   }
 
-  localStorage.setItem("next_" + i, next.toISOString());
+  localStorage.setItem("next_"+i,next.toISOString());
   render();
 }
 
-
 /* ===== RENDER ===== */
 function render(){
-  table.innerHTML = "";
+  table.innerHTML="";
 
   bosses.forEach((b,i)=>{
-    const saved = localStorage.getItem("next_" + i);
-    let statusHTML = `<div class="spawned">SPAWNED</div>`;
-    let day = "-";
-    let time = "-";
+    const saved=localStorage.getItem("next_"+i);
+    let statusHTML=`<div class="spawned">SPAWNED</div>`;
+    let day="-";
+    let time="-";
 
     if(saved){
-      const next = new Date(saved);
-      const diff = next - new Date();
+      const next=new Date(saved);
+      const diff=next-new Date();
 
-      if(diff > 0){
-        const h = Math.floor(diff / 3600000);
-        const m = Math.floor((diff % 3600000) / 60000);
-
-        statusHTML = `<div class="countdown">${h}h ${m}m</div>`;
-        day = next.toLocaleDateString(undefined,{weekday:"short"});
-        time = next.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
-      } else {
-        localStorage.removeItem("next_" + i);
+      if(diff>0){
+        const h=Math.floor(diff/3600000);
+        const m=Math.floor((diff%3600000)/60000);
+        statusHTML=`<div class="countdown">${h}h ${m}m</div>`;
+        day=next.toLocaleDateString(undefined,{weekday:"short"});
+        time=next.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
+      }else{
+        localStorage.removeItem("next_"+i);
       }
     }
 
-    table.innerHTML += `
+    table.innerHTML+=`
 <tr>
 <td>${b.lv}</td>
 <td class="boss-cell">
@@ -266,7 +260,7 @@ function render(){
 <td>${day}</td>
 <td>${time}</td>
 <td>${statusHTML}</td>
-<td>${isAdmin ? `<button onclick="resetBoss(${i})">Reset</button>` : "-"}</td>
+<td>${isAdmin?`<button onclick="resetBoss(${i})">Reset</button>`:"-"}</td>
 </tr>`;
   });
 }
@@ -277,3 +271,4 @@ render();
 
 </body>
 </html>
+

@@ -154,80 +154,74 @@ const bosses = [
  {lv:100,name:"Tumier",img:"tumier.png",day:0,time:"21:00"}
 ];
 
-
 const table = document.getElementById("bossTable");
 
 /* ===== ADMIN LOGIN ===== */
 function adminLogin(){
   if(isAdmin){
     localStorage.removeItem("admin");
-    isAdmin=false;
+    isAdmin = false;
     alert("Logged out");
     render();
     return;
   }
-  const u=prompt("Username");
-  const p=prompt("Password");
-  if(u===ADMIN_USER && p===ADMIN_PASS){
+  const u = prompt("Username");
+  const p = prompt("Password");
+  if(u === ADMIN_USER && p === ADMIN_PASS){
     localStorage.setItem("admin","1");
-    isAdmin=true;
+    isAdmin = true;
     alert("Admin enabled");
     render();
   } else alert("Wrong login");
 }
 
-/* ===== FORCE ALL SPAWNED INIT ===== */
-bosses.forEach((_,i)=>{
-  if(!localStorage.getItem("spawned_"+i)){
-    localStorage.setItem("spawned_"+i,"1");
-  }
-});
-
-/* ===== RESET ===== */
+/* ===== RESET BOSS ===== */
 function resetBoss(i){
   if(!isAdmin) return alert("Admin only");
-  localStorage.removeItem("spawned_"+i);
-  localStorage.setItem("reset_"+i,Date.now());
-  render();
-}
 
-/* ===== NEXT SPAWN ===== */
-function nextSpawn(b,i){
-  const reset=localStorage.getItem("reset_"+i);
-  if(reset){
-    const d=new Date(parseInt(reset));
-    d.setDate(d.getDate()+7);
-    return d;
-  }
-  const now=new Date();
-  const [h,m]=b.time.split(":");
-  let d=new Date(now);
-  d.setHours(h,m,0,0);
-  d.setDate(d.getDate()+((7+b.day-d.getDay())%7));
-  if(d<now) d.setDate(d.getDate()+7);
-  return d;
+  const b = bosses[i];
+  const now = new Date();
+  const [h,m] = b.time.split(":");
+
+  let next = new Date(now);
+  next.setHours(h,m,0,0);
+  next.setDate(next.getDate() + ((7 + b.day - next.getDay()) % 7));
+  if(next <= now) next.setDate(next.getDate() + 7);
+
+  localStorage.setItem("reset_"+i, next.toISOString());
+  render();
 }
 
 /* ===== RENDER ===== */
 function render(){
-  table.innerHTML="";
+  table.innerHTML = "";
+
   bosses.forEach((b,i)=>{
-    const spawn=nextSpawn(b,i);
-    const diff=spawn-new Date();
-    const spawned=localStorage.getItem("spawned_"+i)==="1";
+    const reset = localStorage.getItem("reset_"+i);
+    let statusHTML = `<div class="spawned">SPAWNED</div>`;
 
-    const status=spawned
-      ? `<div class="spawned">SPAWNED</div>`
-      : `<div class="countdown">${Math.floor(diff/3600000)}h ${Math.floor(diff/60000)%60}m</div>`;
+    if(reset){
+      const diff = new Date(reset) - new Date();
+      if(diff > 0){
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        statusHTML = `<div class="countdown">${h}h ${m}m</div>`;
+      } else {
+        localStorage.removeItem("reset_"+i);
+      }
+    }
 
-    table.innerHTML+=`
+    table.innerHTML += `
 <tr>
 <td>${b.lv}</td>
-<td class="boss-cell"><img class="boss-img" src="images/${b.img}">${b.name}</td>
+<td class="boss-cell">
+  <img class="boss-img" src="images/${b.img}">
+  ${b.name}
+</td>
 <td>${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"][b.day]}</td>
 <td>${b.time}</td>
-<td>${status}</td>
-<td>${isAdmin?`<button onclick="resetBoss(${i})">Reset</button>`:"-"}</td>
+<td>${statusHTML}</td>
+<td>${isAdmin ? `<button onclick="resetBoss(${i})">Reset</button>` : "-"}</td>
 </tr>`;
   });
 }

@@ -128,6 +128,7 @@ td{
 <script>
 const ADMIN_USER="legendweapon";
 const ADMIN_PASS="legendweapon";
+const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1463902847891669117/TKAZDfBJPepejw0F1lNRHXSK7dLzUdDh2uy2gq66UKrCpYTJfdc-quyVrFznNbz-g3ta";
 let isAdmin=localStorage.getItem("admin")==="1";
 let cachedOrder=null;
 
@@ -222,12 +223,36 @@ function resetBoss(i){
   render(true);
 }
 
+  function sendDiscordAlert(bossName) {
+  fetch(DISCORD_WEBHOOK, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      content: `🚨 **${bossName} has SPAWNED!**`
+    })
+  }).catch(err => console.error("Discord alert failed", err));
+}
+  
+  function resetBoss(i){
+  if(!isAdmin) return;
+  localStorage.removeItem("next_"+i);
+  localStorage.removeItem("alerted_"+i);
+  cachedOrder=null;
+  render(true);
+}
+
 function render(force=false){
   table.innerHTML="";
   const now=new Date();
 
   let rows=bosses.map((b,i)=>{
     const next=getBossNext(i);
+    
+    if (r.spawned && !localStorage.getItem("alerted_" + r.i)) {
+  sendDiscordAlert(r.b.name);
+  localStorage.setItem("alerted_" + r.i, "1");
+}
+    
     return{b,i,next,diff:next-now,spawned:next<=now};
   });
 

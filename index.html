@@ -94,13 +94,6 @@ td{
   min-width:90px;
   text-align:center;
 }
-
-@media(max-width:650px){
-  th:nth-child(1),td:nth-child(1),
-  th:nth-child(3),td:nth-child(3){
-    display:none;
-  }
-}
 </style>
 </head>
 
@@ -126,68 +119,68 @@ td{
 </table>
 
 <script>
-/* ===== CONFIG ===== */
+/* ================= CONFIG ================= */
+const DISCORD_WEBHOOK =
+"https://discord.com/api/webhooks/1463902847891669117/TKAZDfBJPepejw0F1lNRHXSK7dLzUdDh2uy2gq66UKrCpYTJfdc-quyVrFznNbz-g3ta";
+
 const ADMIN_USER="legendweapon";
 const ADMIN_PASS="legendweapon";
-const DISCORD_WEBHOOK="https://discord.com/api/webhooks/1463902847891669117/TKAZDfBJPepejw0F1lNRHXSK7dLzUdDh2uy2gq66UKrCpYTJfdc-quyVrFznNbz-g3ta";
 
-let isAdmin=localStorage.getItem("admin")==="1";
+/* ================= STATE ================= */
+let isAdmin = localStorage.getItem("admin")==="1";
 let cachedOrder=null;
 
-/* ===== BOSSES ===== */
+/* ================= BOSSES ================= */
 const bosses=[
- {lv:60,name:"Venatus",img:"venatus.png",interval:10},
- {lv:65,name:"Viorent",img:"viorent.png",interval:10},
- {lv:70,name:"Ego",img:"ego.png",interval:21},
- {lv:75,name:"Clemantis",img:"clemantis.png",fixed:[[1,"13:30"],[4,"21:00"]]},
- {lv:75,name:"Livera",img:"livera.png",interval:24},
- {lv:80,name:"Araneo",img:"araneo.png",interval:24},
- {lv:80,name:"Undomiel",img:"undomiel.png",interval:24},
- {lv:82,name:"Saphirus",img:"saphirus.png",fixed:[[0,"19:00"],[2,"13:30"]]},
- {lv:85,name:"Lady Dalia",img:"ladydalia.png",interval:18},
- {lv:85,name:"General Aquleus",img:"generalaquelus.png",interval:29},
- {lv:86,name:"Thymele",img:"thymele.png",fixed:[[1,"21:00"],[3,"13:30"]]},
- {lv:88,name:"Amentis",img:"amentis.png",interval:29},
- {lv:88,name:"Baron Braudmore",img:"baronbraudmore.png",interval:32},
- {lv:90,name:"Milavy",img:"milavy.png",fixed:[[6,"17:00"]]},
- {lv:92,name:"Wannitas",img:"wannitas.png",interval:48},
- {lv:93,name:"Metus",img:"metus.png",interval:48},
- {lv:94,name:"Duplican",img:"duplican.png",interval:48},
- {lv:95,name:"Shulliar",img:"shulliar.png",interval:35},
- {lv:96,name:"Ringor",img:"ringor.png",fixed:[[6,"19:00"]]},
- {lv:97,name:"Roderick",img:"roderick.png",fixed:[[5,"21:00"]]},
- {lv:98,name:"Gareth",img:"gareth.png",interval:32},
- {lv:98,name:"Titore",img:"titore.png",interval:37},
- {lv:98,name:"Larba",img:"larba.png",interval:35},
- {lv:100,name:"Catena",img:"catena.png",interval:35},
- {lv:100,name:"Auraq",img:"auraq.png",fixed:[[5,"01:00"],[3,"23:00"]]},
- {lv:100,name:"Secreta",img:"secreta.png",interval:62},
- {lv:100,name:"Ordo",img:"ordo.png",interval:62},
- {lv:100,name:"Asta",img:"asta.png",interval:62},
- {lv:100,name:"Supore",img:"supore.png",interval:62},
- {lv:120,name:"Chaiflock",img:"chaiflock.png",fixed:[[6,"00:00"]]}
+ {lv:60,name:"Venatus",interval:10},
+ {lv:65,name:"Viorent",interval:10},
+ {lv:70,name:"Ego",interval:21},
+ {lv:75,name:"Clemantis",fixed:[[1,"13:30"],[4,"21:00"]]},
+ {lv:75,name:"Livera",interval:24},
+ {lv:80,name:"Araneo",interval:24},
+ {lv:80,name:"Undomiel",interval:24},
+ {lv:82,name:"Saphirus",fixed:[[0,"19:00"],[2,"13:30"]]},
+ {lv:85,name:"Lady Dalia",interval:18},
+ {lv:85,name:"General Aquleus",interval:29},
+ {lv:86,name:"Thymele",fixed:[[1,"21:00"],[3,"13:30"]]},
+ {lv:88,name:"Amentis",interval:29},
+ {lv:88,name:"Baron Braudmore",interval:32},
+ {lv:90,name:"Milavy",fixed:[[6,"17:00"]]},
+ {lv:92,name:"Wannitas",interval:48},
+ {lv:93,name:"Metus",interval:48},
+ {lv:94,name:"Duplican",interval:48},
+ {lv:95,name:"Shulliar",interval:35},
+ {lv:96,name:"Ringor",fixed:[[6,"19:00"]]},
+ {lv:97,name:"Roderick",fixed:[[5,"21:00"]]},
+ {lv:98,name:"Gareth",interval:32},
+ {lv:98,name:"Titore",interval:37},
+ {lv:100,name:"Catena",interval:35},
+ {lv:100,name:"Auraq",fixed:[[5,"00:00"],[3,"23:00"]]},
+ {lv:100,name:"Secreta",interval:62},
+ {lv:100,name:"Ordo",interval:62},
+ {lv:100,name:"Asta",interval:62},
+ {lv:100,name:"Supore",interval:62},
+ {lv:120,name:"Chaiflock",fixed:[[6,"00:00"]]},
+ {lv:120,name:"Benji",fixed:[[0,"23:00"]]},
+ {lv:135,name:"Icaruthia",fixed:[[2,"23:00"],[5,"23:00"]]},
+ {lv:135,name:"Motti",fixed:[[3,"21:00"],[6,"21:00"]]},
+ {lv:140,name:"Nevaeh",fixed:[[0,"00:00"]]},
+ {lv:140,name:"Tumier",fixed:[[0,"21:00"]]}
 ];
 
-const table=document.getElementById("bossTable");
-
-/* ===== ADMIN ===== */
-function adminLogin(){
-  if(isAdmin){
-    localStorage.removeItem("admin");
-    isAdmin=false;
-    render(true);
-    return;
-  }
-  const u=prompt("Username");
-  const p=prompt("Password");
-  if(u===ADMIN_USER && p===ADMIN_PASS){
-    localStorage.setItem("admin","1");
-    isAdmin=true;
-    render(true);
-  } else alert("Wrong login");
+/* ================= DISCORD ================= */
+function sendDiscord(msg){
+  fetch(DISCORD_WEBHOOK,{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      content: "@everyone\n" + msg,
+      allowed_mentions: { parse: ["everyone"] }
+    })
+  });
 }
 
-/* ===== FIXED CALC ===== */
+/* ================= TIME ================= */
 function nextFixed(list){
   const now=new Date();
   let soon=null;
@@ -202,89 +195,91 @@ function nextFixed(list){
   return soon;
 }
 
-/* ===== NEXT ===== */
-function getBossNext(i){
-  let saved=localStorage.getItem("next_"+i);
-  if(saved) return new Date(saved);
-
-  const b=bosses[i];
-  const next=b.interval
-    ? new Date(Date.now()+b.interval*3600000)
-    : nextFixed(b.fixed);
-
-  localStorage.setItem("next_"+i,next.toISOString());
-  return next;
+function getNext(i){
+  let s=localStorage.getItem("next_"+i);
+  if(s) return new Date(s);
+  let d=bosses[i].interval
+    ? new Date(Date.now()+bosses[i].interval*3600000)
+    : nextFixed(bosses[i].fixed);
+  localStorage.setItem("next_"+i,d.toISOString());
+  return d;
 }
 
-/* ===== DISCORD ALERT ===== */
-function sendDiscordAlert(name){
-  fetch(DISCORD_WEBHOOK,{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      content:`🚨 **${name} HAS SPAWNED!**`
-    })
-  }).catch(()=>{});
+/* ================= ALERT CHECK ================= */
+function checkAlerts(i,name,diff){
+  if(diff<=600000 && !localStorage.getItem("a10_"+i)){
+    sendDiscord(`⏰ **${name}** will spawn in **10 minutes**`);
+    localStorage.setItem("a10_"+i,"1");
+  }
+  if(diff<=300000 && !localStorage.getItem("a5_"+i)){
+    sendDiscord(`⏰ **${name}** will spawn in **5 minutes**`);
+    localStorage.setItem("a5_"+i,"1");
+  }
+  if(diff<=0 && !localStorage.getItem("spawn_"+i)){
+    sendDiscord(`🚨 **${name} HAS SPAWNED!**`);
+    localStorage.setItem("spawn_"+i,"1");
+  }
 }
 
-/* ===== RESET ===== */
+/* ================= RESET ================= */
 function resetBoss(i){
   if(!isAdmin) return;
-  localStorage.removeItem("next_"+i);
-  localStorage.removeItem("alerted_"+i);
+  ["next_","a10_","a5_","spawn_"].forEach(p=>localStorage.removeItem(p+i));
   cachedOrder=null;
-  render(true);
 }
 
-/* ===== RENDER ===== */
-function render(force=false){
+/* ================= RENDER ================= */
+const table=document.getElementById("bossTable");
+
+function render(){
   table.innerHTML="";
   const now=new Date();
 
   let rows=bosses.map((b,i)=>{
-    const next=getBossNext(i);
-    const spawned=next<=now;
-
-    if(spawned && !localStorage.getItem("alerted_"+i)){
-      sendDiscordAlert(b.name);
-      localStorage.setItem("alerted_"+i,"1");
-    }
-
-    return{b,i,next,diff:next-now,spawned};
+    const next=getNext(i);
+    const diff=next-now;
+    checkAlerts(i,b.name,diff);
+    return{b,i,next,diff,spawned:diff<=0};
   });
 
-  if(force||!cachedOrder){
-    const spawned=rows.filter(r=>r.spawned);
-    const upcoming=rows.filter(r=>!r.spawned).sort((a,b)=>a.next-b.next);
-    cachedOrder=[...spawned,...upcoming].map(r=>r.i);
+  if(!cachedOrder){
+    cachedOrder=[
+      ...rows.filter(r=>r.spawned),
+      ...rows.filter(r=>!r.spawned).sort((a,b)=>a.next-b.next)
+    ].map(r=>r.i);
   }
 
-  rows=cachedOrder.map(i=>rows.find(r=>r.i===i));
-
-  rows.forEach(r=>{
+  cachedOrder.map(i=>rows.find(r=>r.i===i)).forEach(r=>{
     const h=Math.max(0,Math.floor(r.diff/3600000));
     const m=Math.max(0,Math.floor((r.diff%3600000)/60000));
 
     table.innerHTML+=`
 <tr>
 <td>${r.b.lv}</td>
-<td class="boss-cell">
-  <img class="boss-img" src="images/${r.b.img}">
-  ${r.b.name}
-</td>
+<td>${r.b.name}</td>
 <td>${r.next.toLocaleDateString(undefined,{weekday:"short"})}</td>
 <td>${r.next.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</td>
-<td>${r.spawned
-  ? `<div class="spawned">SPAWNED</div>`
-  : `<div class="countdown">${h}h ${m}m</div>`}
-</td>
+<td>${r.spawned?'<span class="spawned">SPAWNED</span>':`<span class="countdown">${h}h ${m}m</span>`}</td>
 <td>${isAdmin?`<button onclick="resetBoss(${r.i})">Reset</button>`:"-"}</td>
 </tr>`;
   });
 }
 
+function adminLogin(){
+  if(isAdmin){
+    localStorage.removeItem("admin");
+    isAdmin=false;
+    cachedOrder=null;
+    return;
+  }
+  if(prompt("Username")===ADMIN_USER && prompt("Password")===ADMIN_PASS){
+    localStorage.setItem("admin","1");
+    isAdmin=true;
+  }
+}
+
 setInterval(render,1000);
-render(true);
+render();
 </script>
 
 </body>

@@ -94,6 +94,13 @@ td{
   min-width:90px;
   text-align:center;
 }
+
+@media(max-width:650px){
+  th:nth-child(1),td:nth-child(1),
+  th:nth-child(3),td:nth-child(3){
+    display:none;
+  }
+}
 </style>
 </head>
 
@@ -119,18 +126,15 @@ td{
 </table>
 
 <script>
-/* ================= CONFIG ================= */
-const DISCORD_WEBHOOK =
-"https://discord.com/api/webhooks/1463902847891669117/TKAZDfBJPepejw0F1lNRHXSK7dLzUdDh2uy2gq66UKrCpYTJfdc-quyVrFznNbz-g3ta";
-
+/* ===== CONFIG ===== */
 const ADMIN_USER="legendweapon";
 const ADMIN_PASS="legendweapon";
+const DISCORD_WEBHOOK="https://discord.com/api/webhooks/1463902847891669117/TKAZDfBJPepejw0F1lNRHXSK7dLzUdDh2uy2gq66UKrCpYTJfdc-quyVrFznNbz-g3ta";
 
-/* ================= STATE ================= */
-let isAdmin = localStorage.getItem("admin")==="1";
+let isAdmin=localStorage.getItem("admin")==="1";
 let cachedOrder=null;
 
-/* ================= BOSSES ================= */
+/* ===== BOSSES ===== */
 const bosses=[
  {lv:60,name:"Venatus",img:"venatus.png",interval:10},
  {lv:65,name:"Viorent",img:"viorent.png",interval:10},
@@ -156,7 +160,7 @@ const bosses=[
  {lv:98,name:"Titore",img:"titore.png",interval:37},
  {lv:98,name:"Larba",img:"larba.png",interval:35},
  {lv:100,name:"Catena",img:"catena.png",interval:35},
- {lv:100,name:"Auraq",img:"auraq.png",fixed:[[6,"00:00"],[3,"23:00"]]},
+ {lv:100,name:"Auraq",img:"auraq.png",fixed:[[5,"00:00"],[3,"23:00"]]},
  {lv:100,name:"Secreta",img:"secreta.png",interval:62},
  {lv:100,name:"Ordo",img:"ordo.png",interval:62},
  {lv:100,name:"Asta",img:"asta.png",interval:62},
@@ -164,19 +168,26 @@ const bosses=[
  {lv:120,name:"Chaiflock",img:"chaiflock.png",fixed:[[6,"00:00"]]}
 ];
 
-/* ================= DISCORD ================= */
-function sendDiscord(msg){
-  fetch(DISCORD_WEBHOOK,{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      content: "@everyone\n" + msg,
-      allowed_mentions: { parse: ["everyone"] }
-    })
-  });
+const table=document.getElementById("bossTable");
+
+/* ===== ADMIN ===== */
+function adminLogin(){
+  if(isAdmin){
+    localStorage.removeItem("admin");
+    isAdmin=false;
+    render(true);
+    return;
+  }
+  const u=prompt("Username");
+  const p=prompt("Password");
+  if(u===ADMIN_USER && p===ADMIN_PASS){
+    localStorage.setItem("admin","1");
+    isAdmin=true;
+    render(true);
+  } else alert("Wrong login");
 }
 
-/* ================= TIME ================= */
+/* ===== FIXED CALC ===== */
 function nextFixed(list){
   const now=new Date();
   let soon=null;
@@ -191,91 +202,89 @@ function nextFixed(list){
   return soon;
 }
 
-function getNext(i){
-  let s=localStorage.getItem("next_"+i);
-  if(s) return new Date(s);
-  let d=bosses[i].interval
-    ? new Date(Date.now()+bosses[i].interval*3600000)
-    : nextFixed(bosses[i].fixed);
-  localStorage.setItem("next_"+i,d.toISOString());
-  return d;
+/* ===== NEXT ===== */
+function getBossNext(i){
+  let saved=localStorage.getItem("next_"+i);
+  if(saved) return new Date(saved);
+
+  const b=bosses[i];
+  const next=b.interval
+    ? new Date(Date.now()+b.interval*3600000)
+    : nextFixed(b.fixed);
+
+  localStorage.setItem("next_"+i,next.toISOString());
+  return next;
 }
 
-/* ================= ALERT CHECK ================= */
-function checkAlerts(i,name,diff){
-  if(diff<=600000 && !localStorage.getItem("a10_"+i)){
-    sendDiscord(`⏰ **${name}** will spawn in **10 minutes**`);
-    localStorage.setItem("a10_"+i,"1");
-  }
-  if(diff<=300000 && !localStorage.getItem("a5_"+i)){
-    sendDiscord(`⏰ **${name}** will spawn in **5 minutes**`);
-    localStorage.setItem("a5_"+i,"1");
-  }
-  if(diff<=0 && !localStorage.getItem("spawn_"+i)){
-    sendDiscord(`🚨 **${name} HAS SPAWNED!**`);
-    localStorage.setItem("spawn_"+i,"1");
-  }
+/* ===== DISCORD ALERT ===== */
+function sendDiscordAlert(name){
+  fetch(DISCORD_WEBHOOK,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      content:`🚨 **${name} HAS SPAWNED!**`
+    })
+  }).catch(()=>{});
 }
 
-/* ================= RESET ================= */
+/* ===== RESET ===== */
 function resetBoss(i){
   if(!isAdmin) return;
-  ["next_","a10_","a5_","spawn_"].forEach(p=>localStorage.removeItem(p+i));
+  localStorage.removeItem("next_"+i);
+  localStorage.removeItem("alerted_"+i);
   cachedOrder=null;
+  render(true);
 }
 
-/* ================= RENDER ================= */
-const table=document.getElementById("bossTable");
-
-function render(){
+/* ===== RENDER ===== */
+function render(force=false){
   table.innerHTML="";
   const now=new Date();
 
   let rows=bosses.map((b,i)=>{
-    const next=getNext(i);
-    const diff=next-now;
-    checkAlerts(i,b.name,diff);
-    return{b,i,next,diff,spawned:diff<=0};
+    const next=getBossNext(i);
+    const spawned=next<=now;
+
+    if(spawned && !localStorage.getItem("alerted_"+i)){
+      sendDiscordAlert(b.name);
+      localStorage.setItem("alerted_"+i,"1");
+    }
+
+    return{b,i,next,diff:next-now,spawned};
   });
 
-  if(!cachedOrder){
-    cachedOrder=[
-      ...rows.filter(r=>r.spawned),
-      ...rows.filter(r=>!r.spawned).sort((a,b)=>a.next-b.next)
-    ].map(r=>r.i);
+  if(force||!cachedOrder){
+    const spawned=rows.filter(r=>r.spawned);
+    const upcoming=rows.filter(r=>!r.spawned).sort((a,b)=>a.next-b.next);
+    cachedOrder=[...spawned,...upcoming].map(r=>r.i);
   }
 
-  cachedOrder.map(i=>rows.find(r=>r.i===i)).forEach(r=>{
+  rows=cachedOrder.map(i=>rows.find(r=>r.i===i));
+
+  rows.forEach(r=>{
     const h=Math.max(0,Math.floor(r.diff/3600000));
     const m=Math.max(0,Math.floor((r.diff%3600000)/60000));
 
     table.innerHTML+=`
 <tr>
 <td>${r.b.lv}</td>
-<td>${r.b.name}</td>
+<td class="boss-cell">
+  <img class="boss-img" src="images/${r.b.img}">
+  ${r.b.name}
+</td>
 <td>${r.next.toLocaleDateString(undefined,{weekday:"short"})}</td>
 <td>${r.next.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</td>
-<td>${r.spawned?'<span class="spawned">SPAWNED</span>':`<span class="countdown">${h}h ${m}m</span>`}</td>
+<td>${r.spawned
+  ? `<div class="spawned">SPAWNED</div>`
+  : `<div class="countdown">${h}h ${m}m</div>`}
+</td>
 <td>${isAdmin?`<button onclick="resetBoss(${r.i})">Reset</button>`:"-"}</td>
 </tr>`;
   });
 }
 
-function adminLogin(){
-  if(isAdmin){
-    localStorage.removeItem("admin");
-    isAdmin=false;
-    cachedOrder=null;
-    return;
-  }
-  if(prompt("Username")===ADMIN_USER && prompt("Password")===ADMIN_PASS){
-    localStorage.setItem("admin","1");
-    isAdmin=true;
-  }
-}
-
 setInterval(render,1000);
-render();
+render(true);
 </script>
 
 </body>

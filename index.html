@@ -217,14 +217,15 @@ function getBossNext(i){
 }
 
 /* ===== DISCORD ALERT ===== */
-function sendDiscordAlert(name){
+function sendDiscord(msg){
   fetch(DISCORD_WEBHOOK,{
     method:"POST",
-    headers:{"Content-Type":"application/json"},
+    headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({
-      content:`🚨 **${name} HAS SPAWNED!**`
+      content: "@everyone\n" + msg,
+      allowed_mentions: { parse: ["everyone"] }
     })
-  }).catch(()=>{});
+  });
 }
 
 /* ===== RESET ===== */

@@ -40,9 +40,10 @@ button{
   background:#2563eb;
   border:none;
   color:#fff;
-  padding:6px 12px;
+  padding:5px 10px;
   border-radius:6px;
   cursor:pointer;
+  font-size:12px;
 }
 
 table{
@@ -54,6 +55,7 @@ table{
 th,td{
   padding:10px;
   border-bottom:1px solid rgba(255,255,255,.08);
+  vertical-align:middle;
 }
 
 th{
@@ -67,7 +69,7 @@ td{
 
 .boss-cell{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   gap:10px;
 }
 
@@ -78,20 +80,23 @@ td{
 }
 
 .spawned{
+  display:inline-block;
   background:var(--green);
-  padding:4px 10px;
+  padding:4px 8px;
   border-radius:6px;
   font-weight:bold;
-  text-align:center;
+  margin-top:4px;
 }
 
 .countdown{
+  display:inline-block;
   background:var(--red);
-  padding:4px 10px;
+  padding:4px 8px;
   border-radius:6px;
   font-weight:bold;
-  text-align:center;
+  margin-top:4px;
   min-width:90px;
+  text-align:center;
 }
 
 @media(max-width:650px){
@@ -129,6 +134,9 @@ td{
 const ADMIN_USER="legendweapon";
 const ADMIN_PASS="legendweapon";
 let isAdmin=localStorage.getItem("admin")==="1";
+
+/* ===== ORDER CACHE ===== */
+let cachedOrder=null;
 
 /* ===== BOSSES ===== */
 const bosses=[
@@ -176,18 +184,18 @@ function adminLogin(){
   if(isAdmin){
     localStorage.removeItem("admin");
     isAdmin=false;
-    return render();
+    return render(true);
   }
   const u=prompt("Username");
   const p=prompt("Password");
   if(u===ADMIN_USER && p===ADMIN_PASS){
     localStorage.setItem("admin","1");
     isAdmin=true;
-    render();
+    render(true);
   } else alert("Wrong login");
 }
 
-/* ===== NEXT FIXED ===== */
+/* ===== FIXED TIME CALC ===== */
 function nextFixed(list){
   const now=new Date();
   let soon=null;
@@ -204,70 +212,72 @@ function nextFixed(list){
 
 /* ===== GET NEXT ===== */
 function getBossNext(i){
-  let next=localStorage.getItem("next_"+i);
-  if(next) return new Date(next);
+  let saved=localStorage.getItem("next_"+i);
+  if(saved) return new Date(saved);
 
   const b=bosses[i];
-  let d;
-  if(b.interval){
-    d=new Date(Date.now()+b.interval*3600000);
-  }else{
-    d=nextFixed(b.fixed);
-  }
-  localStorage.setItem("next_"+i,d.toISOString());
-  return d;
+  let next=b.interval
+    ? new Date(Date.now()+b.interval*3600000)
+    : nextFixed(b.fixed);
+
+  localStorage.setItem("next_"+i,next.toISOString());
+  return next;
 }
 
 /* ===== RESET ===== */
 function resetBoss(i){
   if(!isAdmin) return;
   localStorage.removeItem("next_"+i);
-  render();
+  cachedOrder=null;
+  render(true);
 }
 
 /* ===== RENDER ===== */
-function render(){
+function render(force=false){
   table.innerHTML="";
   const now=new Date();
 
-  const rows=bosses.map((b,i)=>{
+  let rows=bosses.map((b,i)=>{
     const next=getBossNext(i);
-    return{
-      b,i,next,
-      diff:next-now,
-      spawned:next<=now
-    };
+    const diff=next-now;
+    return{b,i,next,diff,spawned:diff<=0};
   });
 
-  const spawned=rows.filter(r=>r.spawned);
-  const upcoming=rows.filter(r=>!r.spawned).sort((a,b)=>a.next-b.next);
-  const ordered=[...spawned,...upcoming];
+  if(force||!cachedOrder){
+    const spawned=rows.filter(r=>r.spawned);
+    const upcoming=rows.filter(r=>!r.spawned).sort((a,b)=>a.next-b.next);
+    cachedOrder=[...spawned,...upcoming].map(r=>r.i);
+  }
 
-  ordered.forEach(r=>{
-    const diff=r.diff;
-    const h=Math.floor(diff/3600000);
-    const m=Math.floor((diff%3600000)/60000);
+  rows=cachedOrder.map(i=>rows.find(r=>r.i===i));
+
+  rows.forEach(r=>{
+    const h=Math.max(0,Math.floor(r.diff/3600000));
+    const m=Math.max(0,Math.floor((r.diff%3600000)/60000));
 
     table.innerHTML+=`
 <tr>
 <td>${r.b.lv}</td>
 <td class="boss-cell">
   <img class="boss-img" src="images/${r.b.img}">
-  ${r.b.name}
+  <div>
+    <strong>${r.b.name}</strong><br>
+    ${r.spawned
+      ? `<span class="spawned">SPAWNED</span>`
+      : `<span class="countdown">${h}h ${m}m</span>`}
+    ${isAdmin?`<br><button onclick="resetBoss(${r.i})">Reset</button>`:""}
+  </div>
 </td>
 <td>${r.next.toLocaleDateString(undefined,{weekday:"short"})}</td>
 <td>${r.next.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</td>
-<td>${r.spawned
-  ? `<div class="spawned">SPAWNED</div>`
-  : `<div class="countdown">${h}h ${m}m</div>`}
-</td>
-<td>${isAdmin?`<button onclick="resetBoss(${r.i})">Reset</button>`:"-"}</td>
+<td>-</td>
+<td>-</td>
 </tr>`;
   });
 }
 
 setInterval(render,1000);
-render();
+render(true);
 </script>
 
 </body>

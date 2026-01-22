@@ -8,7 +8,6 @@
 <style>
 :root{
   --bg-main:#2b1208;
-  --accent:#7a1d14;
   --green:#16a34a;
   --red:#991b1b;
 }
@@ -69,7 +68,7 @@ td{
 
 .boss-cell{
   display:flex;
-  align-items:flex-start;
+  align-items:center;
   gap:10px;
 }
 
@@ -80,21 +79,18 @@ td{
 }
 
 .spawned{
-  display:inline-block;
   background:var(--green);
-  padding:4px 8px;
+  padding:4px 10px;
   border-radius:6px;
   font-weight:bold;
-  margin-top:4px;
+  text-align:center;
 }
 
 .countdown{
-  display:inline-block;
   background:var(--red);
-  padding:4px 8px;
+  padding:4px 10px;
   border-radius:6px;
   font-weight:bold;
-  margin-top:4px;
   min-width:90px;
   text-align:center;
 }
@@ -130,15 +126,11 @@ td{
 </table>
 
 <script>
-/* ===== ADMIN ===== */
 const ADMIN_USER="legendweapon";
 const ADMIN_PASS="legendweapon";
 let isAdmin=localStorage.getItem("admin")==="1";
-
-/* ===== ORDER CACHE ===== */
 let cachedOrder=null;
 
-/* ===== BOSSES ===== */
 const bosses=[
  {lv:60,name:"Venatus",img:"venatus.png",interval:10},
  {lv:65,name:"Viorent",img:"viorent.png",interval:10},
@@ -179,12 +171,12 @@ const bosses=[
 
 const table=document.getElementById("bossTable");
 
-/* ===== ADMIN LOGIN ===== */
 function adminLogin(){
   if(isAdmin){
     localStorage.removeItem("admin");
     isAdmin=false;
-    return render(true);
+    render(true);
+    return;
   }
   const u=prompt("Username");
   const p=prompt("Password");
@@ -195,7 +187,6 @@ function adminLogin(){
   } else alert("Wrong login");
 }
 
-/* ===== FIXED TIME CALC ===== */
 function nextFixed(list){
   const now=new Date();
   let soon=null;
@@ -210,13 +201,12 @@ function nextFixed(list){
   return soon;
 }
 
-/* ===== GET NEXT ===== */
 function getBossNext(i){
   let saved=localStorage.getItem("next_"+i);
   if(saved) return new Date(saved);
 
   const b=bosses[i];
-  let next=b.interval
+  const next=b.interval
     ? new Date(Date.now()+b.interval*3600000)
     : nextFixed(b.fixed);
 
@@ -224,7 +214,6 @@ function getBossNext(i){
   return next;
 }
 
-/* ===== RESET ===== */
 function resetBoss(i){
   if(!isAdmin) return;
   localStorage.removeItem("next_"+i);
@@ -232,15 +221,13 @@ function resetBoss(i){
   render(true);
 }
 
-/* ===== RENDER ===== */
 function render(force=false){
   table.innerHTML="";
   const now=new Date();
 
   let rows=bosses.map((b,i)=>{
     const next=getBossNext(i);
-    const diff=next-now;
-    return{b,i,next,diff,spawned:diff<=0};
+    return{b,i,next,diff:next-now,spawned:next<=now};
   });
 
   if(force||!cachedOrder){
@@ -260,18 +247,15 @@ function render(force=false){
 <td>${r.b.lv}</td>
 <td class="boss-cell">
   <img class="boss-img" src="images/${r.b.img}">
-  <div>
-    <strong>${r.b.name}</strong><br>
-    ${r.spawned
-      ? `<span class="spawned">SPAWNED</span>`
-      : `<span class="countdown">${h}h ${m}m</span>`}
-    ${isAdmin?`<br><button onclick="resetBoss(${r.i})">Reset</button>`:""}
-  </div>
+  ${r.b.name}
 </td>
 <td>${r.next.toLocaleDateString(undefined,{weekday:"short"})}</td>
 <td>${r.next.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</td>
-<td>-</td>
-<td>-</td>
+<td>${r.spawned
+  ? `<div class="spawned">SPAWNED</div>`
+  : `<div class="countdown">${h}h ${m}m</div>`}
+</td>
+<td>${isAdmin?`<button onclick="resetBoss(${r.i})">Reset</button>`:"-"}</td>
 </tr>`;
   });
 }

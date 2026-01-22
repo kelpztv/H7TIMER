@@ -126,12 +126,15 @@ td{
 </table>
 
 <script>
+/* ===== CONFIG ===== */
 const ADMIN_USER="legendweapon";
 const ADMIN_PASS="legendweapon";
-const DISCORD_WEBHOOK = "https://discord.com/api/webhooks/1463902847891669117/TKAZDfBJPepejw0F1lNRHXSK7dLzUdDh2uy2gq66UKrCpYTJfdc-quyVrFznNbz-g3ta";
+const DISCORD_WEBHOOK="https://discord.com/api/webhooks/1463902847891669117/TKAZDfBJPepejw0F1lNRHXSK7dLzUdDh2uy2gq66UKrCpYTJfdc-quyVrFznNbz-g3ta";
+
 let isAdmin=localStorage.getItem("admin")==="1";
 let cachedOrder=null;
 
+/* ===== BOSSES ===== */
 const bosses=[
  {lv:60,name:"Venatus",img:"venatus.png",interval:10},
  {lv:65,name:"Viorent",img:"viorent.png",interval:10},
@@ -141,7 +144,6 @@ const bosses=[
  {lv:80,name:"Araneo",img:"araneo.png",interval:24},
  {lv:80,name:"Undomiel",img:"undomiel.png",interval:24},
  {lv:82,name:"Saphirus",img:"saphirus.png",fixed:[[0,"19:00"],[2,"13:30"]]},
- {lv:80,name:"Neutro",img:"neutro.png",fixed:[[2,"21:00"],[4,"13:30"]]},
  {lv:85,name:"Lady Dalia",img:"ladydalia.png",interval:18},
  {lv:85,name:"General Aquleus",img:"generalaquelus.png",interval:29},
  {lv:86,name:"Thymele",img:"thymele.png",fixed:[[1,"21:00"],[3,"13:30"]]},
@@ -158,21 +160,17 @@ const bosses=[
  {lv:98,name:"Titore",img:"titore.png",interval:37},
  {lv:98,name:"Larba",img:"larba.png",interval:35},
  {lv:100,name:"Catena",img:"catena.png",interval:35},
- {lv:100,name:"Auraq",img:"auraq.png",fixed:[[5,"01:00"],[3,"23:00"]]},
+ {lv:100,name:"Auraq",img:"auraq.png",fixed:[[5,"00:00"],[3,"23:00"]]},
  {lv:100,name:"Secreta",img:"secreta.png",interval:62},
  {lv:100,name:"Ordo",img:"ordo.png",interval:62},
  {lv:100,name:"Asta",img:"asta.png",interval:62},
  {lv:100,name:"Supore",img:"supore.png",interval:62},
- {lv:120,name:"Chaiflock",img:"chaiflock.png",fixed:[[6,"00:00"]]},
- {lv:120,name:"Benji",img:"benji.png",fixed:[[0,"23:00"]]},
- {lv:135,name:"Icaruthia",img:"icaruthia.png",fixed:[[2,"23:00"],[5,"23:00"]]},
- {lv:135,name:"Motti",img:"motti.png",fixed:[[3,"21:00"],[6,"21:00"]]},
- {lv:140,name:"Nevaeh",img:"nevaeh.png",fixed:[[0,"00:00"]]},
- {lv:140,name:"Tumier",img:"tumier.png",fixed:[[0,"21:00"]]}
+ {lv:120,name:"Chaiflock",img:"chaiflock.png",fixed:[[6,"00:00"]]}
 ];
 
 const table=document.getElementById("bossTable");
 
+/* ===== ADMIN ===== */
 function adminLogin(){
   if(isAdmin){
     localStorage.removeItem("admin");
@@ -189,6 +187,7 @@ function adminLogin(){
   } else alert("Wrong login");
 }
 
+/* ===== FIXED CALC ===== */
 function nextFixed(list){
   const now=new Date();
   let soon=null;
@@ -203,6 +202,7 @@ function nextFixed(list){
   return soon;
 }
 
+/* ===== NEXT ===== */
 function getBossNext(i){
   let saved=localStorage.getItem("next_"+i);
   if(saved) return new Date(saved);
@@ -216,24 +216,19 @@ function getBossNext(i){
   return next;
 }
 
-function resetBoss(i){
-  if(!isAdmin) return;
-  localStorage.removeItem("next_"+i);
-  cachedOrder=null;
-  render(true);
+/* ===== DISCORD ALERT ===== */
+function sendDiscordAlert(name){
+  fetch(DISCORD_WEBHOOK,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      content:`🚨 **${name} HAS SPAWNED!**`
+    })
+  }).catch(()=>{});
 }
 
-  function sendDiscordAlert(bossName) {
-  fetch(DISCORD_WEBHOOK, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      content: `🚨 **${bossName} has SPAWNED!**`
-    })
-  }).catch(err => console.error("Discord alert failed", err));
-}
-  
-  function resetBoss(i){
+/* ===== RESET ===== */
+function resetBoss(i){
   if(!isAdmin) return;
   localStorage.removeItem("next_"+i);
   localStorage.removeItem("alerted_"+i);
@@ -241,19 +236,21 @@ function resetBoss(i){
   render(true);
 }
 
+/* ===== RENDER ===== */
 function render(force=false){
   table.innerHTML="";
   const now=new Date();
 
   let rows=bosses.map((b,i)=>{
     const next=getBossNext(i);
-    
-    if (r.spawned && !localStorage.getItem("alerted_" + r.i)) {
-  sendDiscordAlert(r.b.name);
-  localStorage.setItem("alerted_" + r.i, "1");
-}
-    
-    return{b,i,next,diff:next-now,spawned:next<=now};
+    const spawned=next<=now;
+
+    if(spawned && !localStorage.getItem("alerted_"+i)){
+      sendDiscordAlert(b.name);
+      localStorage.setItem("alerted_"+i,"1");
+    }
+
+    return{b,i,next,diff:next-now,spawned};
   });
 
   if(force||!cachedOrder){

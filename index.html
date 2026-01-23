@@ -66,7 +66,6 @@ td{
   font-size:13px;
 }
 
-/* ===== FIXED IMAGE STYLES ===== */
 .boss-cell{
   display:flex;
   align-items:center;
@@ -78,8 +77,6 @@ td{
   height:36px;
   border-radius:6px;
   object-fit:cover;
-  flex-shrink:0;
-  display:block;
   background:#000;
 }
 
@@ -88,7 +85,6 @@ td{
   padding:4px 10px;
   border-radius:6px;
   font-weight:bold;
-  text-align:center;
 }
 
 .countdown{
@@ -96,8 +92,33 @@ td{
   padding:4px 10px;
   border-radius:6px;
   font-weight:bold;
-  min-width:90px;
-  text-align:center;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+}
+
+.modal-content{
+  background:#1f2933;
+  padding:20px;
+  border-radius:8px;
+  width:260px;
+}
+
+.modal-content h3{
+  margin-top:0;
+}
+
+.modal-content input{
+  width:100%;
+  margin-bottom:10px;
+  padding:6px;
 }
 
 @media(max-width:650px){
@@ -130,11 +151,23 @@ td{
 <tbody id="bossTable"></tbody>
 </table>
 
+<!-- Death Time Modal -->
+<div class="modal" id="deathModal">
+  <div class="modal-content">
+    <h3>Set Boss Death Time</h3>
+    <input type="date" id="deathDate">
+    <input type="time" id="deathTime">
+    <button onclick="confirmDeath()">Save</button>
+    <button onclick="closeModal()">Cancel</button>
+  </div>
+</div>
+
 <script>
 const ADMIN_USER="legendweapon";
 const ADMIN_PASS="legendweapon";
 let isAdmin=localStorage.getItem("admin")==="1";
 let cachedOrder=null;
+let activeBossIndex=null;
 
 const bosses=[
  {lv:60,name:"Venatus",img:"venatus.png",interval:10},
@@ -174,8 +207,6 @@ const bosses=[
  {lv:140,name:"Tumier",img:"tumier.png",fixed:[[0,"21:00"]]}
 ];
 
-const table=document.getElementById("bossTable");
-
 function adminLogin(){
   if(isAdmin){
     localStorage.removeItem("admin");
@@ -189,32 +220,29 @@ function adminLogin(){
     localStorage.setItem("admin","1");
     isAdmin=true;
     render(true);
-  } else alert("Wrong login");
+  }
 }
 
-function nextFixed(list){
-  const now=new Date();
+function nextFixed(list, from=new Date()){
   let soon=null;
   list.forEach(([d,t])=>{
     const [h,m]=t.split(":");
-    let x=new Date(now);
+    let x=new Date(from);
     x.setHours(h,m,0,0);
     x.setDate(x.getDate()+((7+d-x.getDay())%7));
-    if(x<=now) x.setDate(x.getDate()+7);
+    if(x<=from) x.setDate(x.getDate()+7);
     if(!soon||x<soon) soon=x;
   });
   return soon;
 }
 
 function getBossNext(i){
-  let saved=localStorage.getItem("next_"+i);
+  const saved=localStorage.getItem("next_"+i);
   if(saved) return new Date(saved);
-
   const b=bosses[i];
   const next=b.interval
     ? new Date(Date.now()+b.interval*3600000)
     : nextFixed(b.fixed);
-
   localStorage.setItem("next_"+i,next.toISOString());
   return next;
 }
@@ -226,9 +254,37 @@ function resetBoss(i){
   render(true);
 }
 
+function openDeathModal(i){
+  activeBossIndex=i;
+  document.getElementById("deathModal").style.display="flex";
+}
+
+function closeModal(){
+  document.getElementById("deathModal").style.display="none";
+}
+
+function confirmDeath(){
+  const d=document.getElementById("deathDate").value;
+  const t=document.getElementById("deathTime").value;
+  if(!d||!t) return;
+
+  const death=new Date(`${d}T${t}`);
+  const b=bosses[activeBossIndex];
+
+  const next=b.interval
+    ? new Date(death.getTime()+b.interval*3600000)
+    : nextFixed(b.fixed, death);
+
+  localStorage.setItem("next_"+activeBossIndex,next.toISOString());
+  closeModal();
+  cachedOrder=null;
+  render(true);
+}
+
 function render(force=false){
-  table.innerHTML="";
   const now=new Date();
+  const table=document.getElementById("bossTable");
+  table.innerHTML="";
 
   let rows=bosses.map((b,i)=>{
     const next=getBossNext(i);
@@ -241,9 +297,8 @@ function render(force=false){
     cachedOrder=[...spawned,...upcoming].map(r=>r.i);
   }
 
-  rows=cachedOrder.map(i=>rows.find(r=>r.i===i));
-
-  rows.forEach(r=>{
+  cachedOrder.forEach(i=>{
+    const r=rows.find(x=>x.i===i);
     const h=Math.max(0,Math.floor(r.diff/3600000));
     const m=Math.max(0,Math.floor((r.diff%3600000)/60000));
 
@@ -251,18 +306,17 @@ function render(force=false){
 <tr>
 <td>${r.b.lv}</td>
 <td class="boss-cell">
-  <img class="boss-img"
-       src="./images/${r.b.img}"
-       onerror="this.src='./images/unknown.png'">
-  <span>${r.b.name}</span>
+  <img class="boss-img" src="images/${r.b.img}" onerror="this.src='images/unknown.png'">
+  ${r.b.name}
 </td>
 <td>${r.next.toLocaleDateString(undefined,{weekday:"short"})}</td>
 <td>${r.next.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</td>
-<td>${r.spawned
-  ? `<div class="spawned">SPAWNED</div>`
-  : `<div class="countdown">${h}h ${m}m</div>`}
+<td>${r.spawned?'<div class="spawned">SPAWNED</div>':`<div class="countdown">${h}h ${m}m</div>`}</td>
+<td>
+${isAdmin?`
+<button onclick="resetBoss(${r.i})">Reset</button>
+<button onclick="openDeathModal(${r.i})">⏱</button>`:"-"}
 </td>
-<td>${isAdmin?`<button onclick="resetBoss(${r.i})">Reset</button>`:"-"}</td>
 </tr>`;
   });
 }
@@ -272,5 +326,4 @@ render(true);
 </script>
 
 </body>
-</html>
 </html>

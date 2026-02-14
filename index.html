@@ -1,176 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>H7 Alliance Boss Timer</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-:root{
-  --bg-main:#2b1208;
-  --green:#16a34a;
-  --red:#991b1b;
-}
-
-body{
-  margin:0;
-  font-family:Arial,sans-serif;
-  color:#f1f5f9;
-  background:
-    linear-gradient(rgba(0,0,0,.65),rgba(0,0,0,.65)),
-    url("images/h7.png") center/cover no-repeat,
-    var(--bg-main);
-}
-
-header{
-  background:linear-gradient(to right,#4a0f0f,#7a1d14);
-  padding:14px 18px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
-
-header h1{
-  font-size:16px;
-  margin:0;
-}
-
-button{
-  background:#2563eb;
-  border:none;
-  color:#fff;
-  padding:5px 10px;
-  border-radius:6px;
-  cursor:pointer;
-  font-size:12px;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:rgba(0,0,0,.65);
-}
-
-th,td{
-  padding:10px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-  vertical-align:middle;
-}
-
-th{
-  color:#fde68a;
-  font-size:13px;
-}
-
-td{
-  font-size:13px;
-}
-
-.boss-cell{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.boss-img{
-  width:36px;
-  height:36px;
-  border-radius:6px;
-  object-fit:cover;
-  background:#000;
-}
-
-.spawned{
-  background:var(--green);
-  padding:4px 10px;
-  border-radius:6px;
-  font-weight:bold;
-}
-
-.countdown{
-  background:var(--red);
-  padding:4px 10px;
-  border-radius:6px;
-  font-weight:bold;
-}
-
-.modal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.75);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:999;
-}
-
-.modal-content{
-  background:#1f2933;
-  padding:20px;
-  border-radius:8px;
-  width:260px;
-}
-
-.modal-content h3{
-  margin-top:0;
-}
-
-.modal-content input{
-  width:100%;
-  margin-bottom:10px;
-  padding:6px;
-}
-
-@media(max-width:650px){
-  th:nth-child(1),td:nth-child(1),
-  th:nth-child(3),td:nth-child(3){
-    display:none;
-  }
-}
-</style>
-</head>
-
-<body>
-
-<header>
-  <h1>H7 ALLIANCE – BOSS SPAWN TIMER (LOCAL TIME)</h1>
-  <div style="display:flex; gap:8px;">
-  <button onclick="enableSound()">Enable Sound</button>
-  <button onclick="adminLogin()">Admin</button>
-</div>
-</header>
-
-<table>
-<thead>
-<tr>
-  <th>LV</th>
-  <th>BOSS</th>
-  <th>DAY</th>
-  <th>SPAWN TIME</th>
-  <th>STATUS</th>
-  <th>ACTION</th>
-</tr>
-</thead>
-<tbody id="bossTable"></tbody>
-</table>
-
-<!-- Death Time Modal -->
-<div class="modal" id="deathModal">
-  <div class="modal-content">
-    <h3>Set Boss Death Time</h3>
-    <input type="date" id="deathDate">
-    <input type="time" id="deathTime">
-    <button onclick="confirmDeath()">Save</button>
-    <button onclick="closeModal()">Cancel</button>
-  </div>
-</div>
-
 <script>
 const ADMIN_USER="legendweapon";
 const ADMIN_PASS="legendweapon";
 let isAdmin=localStorage.getItem("admin")==="1";
 let cachedOrder=null;
 let activeBossIndex=null;
+
+/* ========================= */
+/* 🔔 5 MINUTE ALERT SOUND  */
+/* ========================= */
+
+let audioCtx = null;
+let audioEnabled = false;
+
+function enableSound(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  if(audioCtx.state === "suspended"){
+    audioCtx.resume();
+  }
+
+  audioEnabled = true;
+  alert("🔔 Sound Enabled!");
+}
+
+function playAlertBeep(){
+  if(!audioEnabled || !audioCtx) return;
+
+  if(audioCtx.state === "suspended"){
+    audioCtx.resume();
+  }
+
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+
+  oscillator.type = "square";
+  oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime);
+
+  oscillator.connect(gainNode);
+  gainNode.connect(audioCtx.destination);
+
+  gainNode.gain.setValueAtTime(0.8, audioCtx.currentTime);
+
+  oscillator.start();
+  oscillator.stop(audioCtx.currentTime + 0.8);
+}
+
+/* ========================= */
 
 const bosses=[
  {lv:60,name:"Venatus",img:"venatus.png",interval:10},
@@ -293,62 +170,17 @@ function render(force=false){
   table.innerHTML="";
 
   let rows=bosses.map((b,i)=>{
-  const next=getBossNext(i);
-  const diff = next - now;
+    const next=getBossNext(i);
+    const diff = next - now;
 
-  // 🔔 5 Minute Alert (300000 ms)
-  if(diff > 0 && diff <= 300000 && !localStorage.getItem("alert5_"+i)){
-    playAlertBeep();
-    localStorage.setItem("alert5_"+i,"1");
-  }
+    // 🔔 5 Minute Alert
+    if(diff > 0 && diff <= 300000 && !localStorage.getItem("alert5_"+i)){
+      playAlertBeep();
+      localStorage.setItem("alert5_"+i,"1");
+    }
 
-  return{
-    b,
-    i,
-    next,
-    diff,
-    spawned: next <= now
-  };
-});
-
- /* 🔔 5 Minute Alert Sound (Stable Version) */
-
-let audioCtx = null;
-let audioEnabled = false;
-
-function enableSound(){
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  audioEnabled = true;
-
-  // resume context if suspended
-  if(audioCtx.state === "suspended"){
-    audioCtx.resume();
-  }
-
-  alert("🔔 Sound Enabled!");
-}
-
-function playAlertBeep(){
-  if(!audioEnabled || !audioCtx) return;
-
-  if(audioCtx.state === "suspended"){
-    audioCtx.resume();
-  }
-
-  const oscillator = audioCtx.createOscillator();
-  const gainNode = audioCtx.createGain();
-
-  oscillator.type = "square";
-  oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime);
-
-  oscillator.connect(gainNode);
-  gainNode.connect(audioCtx.destination);
-
-  gainNode.gain.setValueAtTime(0.7, audioCtx.currentTime);
-
-  oscillator.start();
-  oscillator.stop(audioCtx.currentTime + 0.8);
-}
+    return{b,i,next,diff,spawned:next<=now};
+  });
 
   if(force||!cachedOrder){
     const spawned=rows.filter(r=>r.spawned);
@@ -384,5 +216,3 @@ setInterval(render,1000);
 render(true);
 </script>
 
-</body>
-</html>

@@ -134,7 +134,10 @@ td{
 
 <header>
   <h1>H7 ALLIANCE – BOSS SPAWN TIMER (LOCAL TIME)</h1>
+  <div style="display:flex; gap:8px;">
+  <button onclick="enableSound()">Enable Sound</button>
   <button onclick="adminLogin()">Admin</button>
+</div>
 </header>
 
 <table>
@@ -251,6 +254,7 @@ function getBossNext(i){
 function resetBoss(i){
   if(!isAdmin) return;
   localStorage.removeItem("next_"+i);
+  localStorage.removeItem("alert5_"+i);
   cachedOrder=null;
   render(true);
 }
@@ -277,6 +281,7 @@ function confirmDeath(){
     : nextFixed(b.fixed, death);
 
   localStorage.setItem("next_"+activeBossIndex,next.toISOString());
+  localStorage.removeItem("alert5_"+activeBossIndex);
   closeModal();
   cachedOrder=null;
   render(true);
@@ -288,9 +293,52 @@ function render(force=false){
   table.innerHTML="";
 
   let rows=bosses.map((b,i)=>{
-    const next=getBossNext(i);
-    return{b,i,next,diff:next-now,spawned:next<=now};
-  });
+  const next=getBossNext(i);
+  const diff = next - now;
+
+  // 🔔 5 Minute Alert (300000 ms)
+  if(diff > 0 && diff <= 300000 && !localStorage.getItem("alert5_"+i)){
+    playAlertBeep();
+    localStorage.setItem("alert5_"+i,"1");
+  }
+
+  return{
+    b,
+    i,
+    next,
+    diff,
+    spawned: next <= now
+  };
+});
+
+  // 🔔 5 Minute Alert Sound (Built-In Beep)
+let audioEnabled = false;
+
+function enableSound(){
+  audioEnabled = true;
+}
+
+function playAlertBeep(){
+  if(!audioEnabled) return;
+
+  const ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const oscillator = ctx.createOscillator();
+  const gainNode = ctx.createGain();
+
+  oscillator.type = "sine";
+  oscillator.frequency.setValueAtTime(880, ctx.currentTime); // pitch
+
+  oscillator.connect(gainNode);
+  gainNode.connect(ctx.destination);
+
+  gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+  oscillator.start();
+
+  setTimeout(()=>{
+    oscillator.stop();
+    ctx.close();
+  }, 600); // beep length
+}
 
   if(force||!cachedOrder){
     const spawned=rows.filter(r=>r.spawned);

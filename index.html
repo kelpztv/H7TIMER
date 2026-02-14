@@ -311,33 +311,43 @@ function render(force=false){
   };
 });
 
-  // 🔔 5 Minute Alert Sound (Built-In Beep)
+ /* 🔔 5 Minute Alert Sound (Stable Version) */
+
+let audioCtx = null;
 let audioEnabled = false;
 
 function enableSound(){
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   audioEnabled = true;
+
+  // resume context if suspended
+  if(audioCtx.state === "suspended"){
+    audioCtx.resume();
+  }
+
+  alert("🔔 Sound Enabled!");
 }
 
 function playAlertBeep(){
-  if(!audioEnabled) return;
+  if(!audioEnabled || !audioCtx) return;
 
-  const ctx = new (window.AudioContext || window.webkitAudioContext)();
-  const oscillator = ctx.createOscillator();
-  const gainNode = ctx.createGain();
+  if(audioCtx.state === "suspended"){
+    audioCtx.resume();
+  }
 
-  oscillator.type = "sine";
-  oscillator.frequency.setValueAtTime(880, ctx.currentTime); // pitch
+  const oscillator = audioCtx.createOscillator();
+  const gainNode = audioCtx.createGain();
+
+  oscillator.type = "square";
+  oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime);
 
   oscillator.connect(gainNode);
-  gainNode.connect(ctx.destination);
+  gainNode.connect(audioCtx.destination);
 
-  gainNode.gain.setValueAtTime(0.5, ctx.currentTime);
+  gainNode.gain.setValueAtTime(0.7, audioCtx.currentTime);
+
   oscillator.start();
-
-  setTimeout(()=>{
-    oscillator.stop();
-    ctx.close();
-  }, 600); // beep length
+  oscillator.stop(audioCtx.currentTime + 0.8);
 }
 
   if(force||!cachedOrder){

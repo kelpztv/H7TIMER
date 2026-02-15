@@ -26,7 +26,7 @@ header{
   justify-content:space-between;
   align-items:center;
 }
-header h1{ font-size:16px; margin:0; }
+header h1{ font-size:14px; margin:0; }
 button{
   background:#2563eb;
   border:none;
@@ -36,37 +36,45 @@ button{
   cursor:pointer;
   font-size:12px;
 }
+button:hover{ opacity:.85; }
+
 table{
   width:100%;
   border-collapse:collapse;
-  background:rgba(0,0,0,.65);
+  background:rgba(0,0,0,.7);
 }
 th,td{
-  padding:10px;
+  padding:8px;
   border-bottom:1px solid rgba(255,255,255,.08);
+  font-size:12px;
 }
-th{ color:#fde68a; font-size:13px; }
-td{ font-size:13px; }
-.boss-cell{ display:flex; align-items:center; gap:10px; }
+th{ color:#fde68a; }
+
+.boss-cell{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
 .boss-img{
-  width:36px;
-  height:36px;
+  width:34px;
+  height:34px;
   border-radius:6px;
   object-fit:cover;
   background:#000;
 }
 .spawned{
   background:var(--green);
-  padding:4px 10px;
+  padding:4px 8px;
   border-radius:6px;
   font-weight:bold;
 }
 .countdown{
   background:var(--red);
-  padding:4px 10px;
+  padding:4px 8px;
   border-radius:6px;
   font-weight:bold;
 }
+
 .modal{
   position:fixed;
   inset:0;
@@ -86,6 +94,7 @@ td{ font-size:13px; }
   margin-bottom:10px;
   padding:6px;
 }
+
 @media(max-width:650px){
   th:nth-child(1),td:nth-child(1),
   th:nth-child(3),td:nth-child(3){ display:none; }
@@ -99,7 +108,7 @@ td{ font-size:13px; }
 <h1>H7 ALLIANCE – BOSS SPAWN TIMER (LOCAL TIME)</h1>
 <div style="display:flex; gap:8px;">
 <button onclick="enableSound()">Enable Sound</button>
-<button onclick="adminLogin()">Admin</button>
+<button id="adminBtn" onclick="adminLogin()">Admin</button>
 </div>
 </header>
 
@@ -129,148 +138,214 @@ td{ font-size:13px; }
 
 <script>
 
+/* ================= ADMIN SYSTEM ================= */
+
 const ADMIN_USER="legendweapon";
 const ADMIN_PASS="legendweapon";
 let isAdmin=localStorage.getItem("admin")==="1";
-let cachedOrder=null;
 let activeBossIndex=null;
 
-/* 🔔 SOUND SYSTEM (GLOBAL + FIXED) */
+function adminLogin(){
+  if(isAdmin){
+    isAdmin=false;
+    localStorage.removeItem("admin");
+    document.getElementById("adminBtn").innerText="Admin";
+    render();
+    return;
+  }
+
+  const user=prompt("Username:");
+  const pass=prompt("Password:");
+
+  if(user===ADMIN_USER && pass===ADMIN_PASS){
+    isAdmin=true;
+    localStorage.setItem("admin","1");
+    document.getElementById("adminBtn").innerText="Logout";
+    render();
+  }else{
+    alert("Invalid credentials");
+  }
+}
+
+window.onload=function(){
+  if(isAdmin){
+    document.getElementById("adminBtn").innerText="Logout";
+  }
+};
+
+/* ================= SOUND ================= */
+
 let audioCtx=null;
 let audioEnabled=false;
 
 function enableSound(){
   audioCtx=new (window.AudioContext||window.webkitAudioContext)();
   audioEnabled=true;
-  if(audioCtx.state==="suspended") audioCtx.resume();
-  alert("🔔 Sound Enabled!");
+  alert("Sound Enabled");
 }
 
 function playAlertBeep(){
   if(!audioEnabled||!audioCtx) return;
-  if(audioCtx.state==="suspended") audioCtx.resume();
-
   const osc=audioCtx.createOscillator();
   const gain=audioCtx.createGain();
-
   osc.type="square";
   osc.frequency.value=1000;
   gain.gain.value=0.7;
-
   osc.connect(gain);
   gain.connect(audioCtx.destination);
-
   osc.start();
-  osc.stop(audioCtx.currentTime+0.8);
+  osc.stop(audioCtx.currentTime+0.7);
 }
 
-/* FULL BOSS LIST */
-const bosses=[
+/* ================= BOSS LIST ================= */
+
+const bosses = [
+
 {lv:60,name:"Venatus",img:"venatus.png",interval:10},
 {lv:65,name:"Viorent",img:"viorent.png",interval:10},
 {lv:70,name:"Ego",img:"ego.png",interval:21},
+
 {lv:75,name:"Clemantis",img:"clemantis.png",fixed:[[1,"11:30"],[4,"19:00"]]},
 {lv:75,name:"Livera",img:"livera.png",interval:24},
+
 {lv:80,name:"Araneo",img:"araneo.png",interval:24},
 {lv:80,name:"Undomiel",img:"undomiel.png",interval:24},
-{lv:82,name:"Saphirus",img:"saphirus.png",fixed:[[0,"17:00"],[2,"11:30"]]},
 {lv:80,name:"Neutro",img:"neutro.png",fixed:[[2,"19:00"],[4,"11:30"]]},
+
+{lv:82,name:"Saphirus",img:"saphirus.png",fixed:[[0,"17:00"],[2,"11:30"]]},
+
 {lv:85,name:"Lady Dalia",img:"ladydalia.png",interval:18},
 {lv:85,name:"General Aquleus",img:"generalaquelus.png",interval:29},
+
 {lv:86,name:"Thymele",img:"thymele.png",fixed:[[1,"19:00"],[3,"11:30"]]},
+
 {lv:88,name:"Amentis",img:"amentis.png",interval:29},
 {lv:88,name:"Baron Braudmore",img:"baronbraudmore.png",interval:32},
+
 {lv:90,name:"Milavy",img:"milavy.png",fixed:[[6,"15:00"]]},
+
 {lv:92,name:"Wannitas",img:"wannitas.png",interval:48},
 {lv:93,name:"Metus",img:"metus.png",interval:48},
 {lv:94,name:"Duplican",img:"duplican.png",interval:48},
+
 {lv:95,name:"Shulliar",img:"shulliar.png",interval:35},
+
 {lv:96,name:"Ringor",img:"ringor.png",fixed:[[6,"17:00"]]},
+
 {lv:97,name:"Roderick",img:"roderick.png",fixed:[[5,"19:00"]]},
+
 {lv:98,name:"Gareth",img:"gareth.png",interval:32},
 {lv:98,name:"Titore",img:"titore.png",interval:37},
 {lv:98,name:"Larba",img:"larba.png",interval:35},
+
 {lv:100,name:"Catena",img:"catena.png",interval:35},
 {lv:100,name:"Auraq",img:"auraq.png",fixed:[[5,"22:00"],[3,"21:00"]]},
 {lv:100,name:"Secreta",img:"secreta.png",interval:62},
 {lv:100,name:"Ordo",img:"ordo.png",interval:62},
 {lv:100,name:"Asta",img:"asta.png",interval:62},
 {lv:100,name:"Supore",img:"supore.png",interval:62},
+
 {lv:120,name:"Chaiflock",img:"chaiflock.png",fixed:[[6,"22:00"]]},
 {lv:120,name:"Benji",img:"benji.png",fixed:[[0,"21:00"]]},
+
 {lv:135,name:"Icaruthia",img:"icaruthia.png",fixed:[[2,"21:00"],[5,"21:00"]]},
 {lv:135,name:"Motti",img:"motti.png",fixed:[[3,"19:00"],[6,"19:00"]]},
+
 {lv:140,name:"Nevaeh",img:"nevaeh.png",fixed:[[0,"22:00"]]},
 {lv:140,name:"Tumier",img:"tumier.png",fixed:[[0,"19:00"]]}
+
 ];
 
-/* Rest of logic unchanged */
+
+/* ================= CORE LOGIC ================= */
 
 function nextFixed(list, from=new Date()){
-let soon=null;
-list.forEach(([d,t])=>{
-const [h,m]=t.split(":");
-let x=new Date(from);
-x.setHours(h,m,0,0);
-x.setDate(x.getDate()+((7+d-x.getDay())%7));
-if(x<=from) x.setDate(x.getDate()+7);
-if(!soon||x<soon) soon=x;
-});
-return soon;
-}
-  
-function adminLogin(){
-  if(isAdmin){
-    alert("Already logged in as Admin");
-    return;
-  }
-
-  const user = prompt("Enter Admin Username:");
-  if(!user) return;
-
-  const pass = prompt("Enter Admin Password:");
-  if(!pass) return;
-
-  if(user === ADMIN_USER && pass === ADMIN_PASS){
-    isAdmin = true;
-    localStorage.setItem("admin","1");
-    alert("✅ Admin Login Successful");
-    render(true);
-  }else{
-    alert("❌ Invalid Credentials");
-  }
+  let soon=null;
+  list.forEach(([d,t])=>{
+    const [h,m]=t.split(":");
+    let x=new Date(from);
+    x.setHours(h,m,0,0);
+    x.setDate(x.getDate()+((7+d-x.getDay())%7));
+    if(x<=from) x.setDate(x.getDate()+7);
+    if(!soon||x<soon) soon=x;
+  });
+  return soon;
 }
 
 function getBossNext(i){
-const saved=localStorage.getItem("next_"+i);
-if(saved) return new Date(saved);
-const b=bosses[i];
-const next=b.interval
-? new Date(Date.now()+b.interval*3600000)
-: nextFixed(b.fixed);
-localStorage.setItem("next_"+i,next.toISOString());
-return next;
+  const saved=localStorage.getItem("next_"+i);
+  if(saved) return new Date(saved);
+
+  const b=bosses[i];
+  const next=b.interval
+    ? new Date(Date.now()+b.interval*3600000)
+    : nextFixed(b.fixed);
+
+  localStorage.setItem("next_"+i,next.toISOString());
+  return next;
 }
 
-function render(force=false){
-const now=new Date();
-const table=document.getElementById("bossTable");
-table.innerHTML="";
+/* ================= ADMIN ACTIONS ================= */
 
-bosses.forEach((b,i)=>{
-const next=getBossNext(i);
-const diff=next-now;
-
-/* 5 MIN ALERT */
-if(diff>0 && diff<=300000 && !localStorage.getItem("alert5_"+i)){
-playAlertBeep();
-localStorage.setItem("alert5_"+i,"1");
+function openModal(index){
+  if(!isAdmin) return;
+  activeBossIndex=index;
+  document.getElementById("deathModal").style.display="flex";
 }
 
-const h=Math.max(0,Math.floor(diff/3600000));
-const m=Math.max(0,Math.floor((diff%3600000)/60000));
+function closeModal(){
+  document.getElementById("deathModal").style.display="none";
+}
 
-table.innerHTML+=`
+function confirmDeath(){
+  const date=document.getElementById("deathDate").value;
+  const time=document.getElementById("deathTime").value;
+  if(!date||!time) return alert("Select date & time");
+
+  const death=new Date(date+"T"+time);
+  const boss=bosses[activeBossIndex];
+  let next;
+
+  if(boss.interval){
+    next=new Date(death.getTime()+boss.interval*3600000);
+  }else{
+    next=nextFixed(boss.fixed,death);
+  }
+
+  localStorage.setItem("next_"+activeBossIndex,next.toISOString());
+  localStorage.removeItem("alert5_"+activeBossIndex);
+
+  closeModal();
+  render();
+}
+
+function resetBoss(index){
+  if(!isAdmin) return;
+  localStorage.removeItem("next_"+index);
+  localStorage.removeItem("alert5_"+index);
+  render();
+}
+
+/* ================= RENDER ================= */
+
+function render(){
+  const now=new Date();
+  const table=document.getElementById("bossTable");
+  table.innerHTML="";
+
+  bosses.forEach((b,i)=>{
+    const next=getBossNext(i);
+    const diff=next-now;
+
+    if(diff>0 && diff<=300000 && !localStorage.getItem("alert5_"+i)){
+      playAlertBeep();
+      localStorage.setItem("alert5_"+i,"1");
+    }
+
+    const h=Math.max(0,Math.floor(diff/3600000));
+    const m=Math.max(0,Math.floor((diff%3600000)/60000));
+
+    table.innerHTML+=`
 <tr>
 <td>${b.lv}</td>
 <td class="boss-cell">
@@ -283,13 +358,18 @@ ${b.name}
 ? '<div class="spawned">SPAWNED</div>'
 : '<div class="countdown">'+h+'h '+m+'m</div>'}
 </td>
-<td>-</td>
+<td>
+${isAdmin
+? `<button onclick="openModal(${i})">Set Death</button>
+   <button onclick="resetBoss(${i})">Reset</button>`
+: '-'}
+</td>
 </tr>`;
-});
+  });
 }
 
 setInterval(render,1000);
-render(true);
+render();
 
 </script>
 </body>

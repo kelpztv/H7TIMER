@@ -190,7 +190,7 @@ function playAlertBeep(){
   const gain=audioCtx.createGain();
   osc.type="square";
   osc.frequency.value=1000;
-  gain.gain.value=0.7;
+  gain.gain.value=0.2;
   osc.connect(gain);
   gain.connect(audioCtx.destination);
   osc.start();

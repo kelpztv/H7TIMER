@@ -218,6 +218,28 @@ if(!soon||x<soon) soon=x;
 });
 return soon;
 }
+  
+function adminLogin(){
+  if(isAdmin){
+    alert("Already logged in as Admin");
+    return;
+  }
+
+  const user = prompt("Enter Admin Username:");
+  if(!user) return;
+
+  const pass = prompt("Enter Admin Password:");
+  if(!pass) return;
+
+  if(user === ADMIN_USER && pass === ADMIN_PASS){
+    isAdmin = true;
+    localStorage.setItem("admin","1");
+    alert("✅ Admin Login Successful");
+    render(true);
+  }else{
+    alert("❌ Invalid Credentials");
+  }
+}
 
 function getBossNext(i){
 const saved=localStorage.getItem("next_"+i);

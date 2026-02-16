@@ -348,15 +348,26 @@ function render(){
   const table=document.getElementById("bossTable");
   table.innerHTML="";
 
-  bosses.forEach((b,i)=>{
-    const next=getBossNext(i);
-    const diff=next-now;
+  // Sort bosses by soonest spawn
+  const sortedBosses = bosses
+    .map((b, i) => ({
+      boss: b,
+      index: i,
+      next: getBossNext(i)
+    }))
+    .sort((a, b) => a.next - b.next);
 
-// 10 minute warning
-if(diff > 0 && diff <= 600000 && !localStorage.getItem("alert10_"+i)){
-  multiBeep(5);
-  localStorage.setItem("alert10_"+i,"1");
-}
+  sortedBosses.forEach((item)=>{
+    const b = item.boss;
+    const i = item.index;
+    const next = item.next;
+    const diff = next - now;
+
+    // 10 minute warning
+    if(diff > 0 && diff <= 600000 && !localStorage.getItem("alert10_"+i)){
+      multiBeep(5);
+      localStorage.setItem("alert10_"+i,"1");
+    }
 
     const h=Math.max(0,Math.floor(diff/3600000));
     const m=Math.max(0,Math.floor((diff%3600000)/60000));

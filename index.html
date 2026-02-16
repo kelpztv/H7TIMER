@@ -326,6 +326,7 @@ function confirmDeath(){
 
   localStorage.setItem("next_"+activeBossIndex,next.toISOString());
   localStorage.removeItem("alert5_"+activeBossIndex);
+  localStorage.removeItem("alert10_"+activeBossIndex);
 
   closeModal();
   render();
@@ -335,6 +336,8 @@ function resetBoss(index){
   if(!isAdmin) return;
   localStorage.removeItem("next_"+index);
   localStorage.removeItem("alert5_"+index);
+  localStorage.removeItem("alert10_"+index);
+
   render();
 }
 
@@ -349,11 +352,12 @@ function render(){
     const next=getBossNext(i);
     const diff=next-now;
 
-    // 10 minute alert
+// 10 minute warning
 if(diff > 0 && diff <= 600000 && !localStorage.getItem("alert10_"+i)){
   multiBeep(5);
   localStorage.setItem("alert10_"+i,"1");
 }
+
 
     const h=Math.max(0,Math.floor(diff/3600000));
     const m=Math.max(0,Math.floor((diff%3600000)/60000));

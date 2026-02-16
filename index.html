@@ -197,6 +197,18 @@ function playAlertBeep(){
   osc.stop(audioCtx.currentTime+0.2);
 }
 
+function multiBeep(times){
+  let count = 0;
+
+  const interval = setInterval(()=>{
+    playAlertBeep();
+    count++;
+    if(count >= times){
+      clearInterval(interval);
+    }
+  }, 400); // 400ms between beeps
+}
+
 /* ================= BOSS LIST ================= */
 
 const bosses = [
@@ -338,9 +350,9 @@ function render(){
     const diff=next-now;
 
     if(diff>0 && diff<=300000 && !localStorage.getItem("alert5_"+i)){
-      playAlertBeep();
-      localStorage.setItem("alert5_"+i,"1");
-    }
+  multiBeep(5); // number = how many beeps
+  localStorage.setItem("alert5_"+i,"1");
+}
 
     const h=Math.max(0,Math.floor(diff/3600000));
     const m=Math.max(0,Math.floor((diff%3600000)/60000));

@@ -349,9 +349,10 @@ function render(){
     const next=getBossNext(i);
     const diff=next-now;
 
-    if(diff>0 && diff<=300000 && !localStorage.getItem("alert10_"+i)){
-  multiBeep(5); // number = how many beeps
-  localStorage.setItem("alert5_"+i,"1");
+    // 10 minute alert
+if(diff > 0 && diff <= 600000 && !localStorage.getItem("alert10_"+i)){
+  multiBeep(5);
+  localStorage.setItem("alert10_"+i,"1");
 }
 
     const h=Math.max(0,Math.floor(diff/3600000));

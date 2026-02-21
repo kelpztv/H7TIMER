@@ -206,7 +206,7 @@ function multiBeep(times){
     if(count >= times){
       clearInterval(interval);
     }
-  }, 400); // 400ms between beeps
+  }, 1200); // 1200ms between beeps
 }
 
 /* ================= BOSS LIST ================= */
@@ -365,7 +365,7 @@ function render(){
 
     // 10 minute warning
     if(diff > 0 && diff <= 600000 && !localStorage.getItem("alert10_"+i)){
-      multiBeep(5);
+      multiBeep(10, 1200); // 1.2 sec between beeps
       localStorage.setItem("alert10_"+i,"1");
     }
 

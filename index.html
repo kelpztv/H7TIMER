@@ -355,7 +355,31 @@ function render(){
     const b = item.boss;
     const i = item.index;
     const next = item.next;
-    const diff = next - now;
+    let diff = next - now;
+
+// AUTO RESET 3 MIN AFTER SPAWN
+if (diff <= 0) {
+  const spawnedAt = next;
+  const nowTime = new Date();
+
+  if (nowTime - spawnedAt >= 180000) {
+    const boss = bosses[i];
+    let newNext;
+
+    if (boss.interval) {
+      newNext = new Date(spawnedAt.getTime() + boss.interval * 3600000);
+    } else {
+      newNext = nextFixed(boss.fixed, spawnedAt);
+    }
+
+    localStorage.setItem("next_" + i, newNext.toISOString());
+
+    localStorage.removeItem("alert5_" + i);
+    localStorage.removeItem("alert10_" + i);
+
+    diff = newNext - nowTime;
+  }
+}
 
     // 10 minute warning
     if(diff > 0 && diff <= 600000 && !localStorage.getItem("alert10_"+i)){
